@@ -6,7 +6,9 @@ import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.InterModComms;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
@@ -16,6 +18,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lullaby.cherubmod.capability.RaceCapability;
+import org.lullaby.cherubmod.config.CherubServerConfig;
 import org.lullaby.cherubmod.item.ModItems;
 import org.lullaby.cherubmod.network.CherubNetwork;
 
@@ -40,6 +43,7 @@ public class Cherubmod {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::doClientStuff);
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
         ModItems.ITEMS.register(modBus);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, CherubServerConfig.SPEC);
         modBus.addListener(this::commonSetup);
 
         // Register ourselves for server and other game events we are interested in

@@ -1,15 +1,27 @@
 package org.lullaby.cherubmod.possession;
 
+import com.google.common.collect.Multimap;
+import net.minecraft.block.Blocks;
+import net.minecraft.enchantment.EnchantmentType;
+import net.minecraft.entity.ai.attributes.Attribute;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.ItemStack;
+import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.item.*;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Hand;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraftforge.common.ForgeMod;
+import net.minecraftforge.energy.CapabilityEnergy;
+import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import net.minecraftforge.items.CapabilityItemHandler;
 import org.lullaby.cherubmod.capability.IRaceData;
 import org.lullaby.cherubmod.capability.Race;
 import org.lullaby.cherubmod.capability.RaceCapability;
+import org.lullaby.cherubmod.config.CherubServerConfig;
 import org.lullaby.cherubmod.network.CherubNetwork;
 
 public class PossessionHelper {
@@ -81,7 +93,77 @@ public class PossessionHelper {
     }
 
     public static boolean isValidForDesignation(ItemStack stack) {
-        return !stack.isEmpty() && stack.getCount() == 1 && !isPossessionStack(stack);
+        // 1. Broad rules
+        if (stack.isEmpty() || stack.getCount() != 1 || isPossessionStack(stack) || stack.getMaxStackSize() != 1) {
+            return false;
+        }
+
+        Item item = stack.getItem();
+        // 2. Blacklist pass
+        if (CherubServerConfig.isInvalidPossession(item)) {
+            return false;
+        }
+        // 3. Whitelist pass
+        if (CherubServerConfig.isValidPossession(item)) {
+            return true;
+        }
+        // 4. Problematic items (storage, consumable)
+        if (item instanceof BlockItem
+                || item instanceof ArmorItem
+                || item instanceof BucketItem
+                || item instanceof PotionItem
+                || item instanceof MilkBucketItem
+                || item instanceof SpawnEggItem
+                || item instanceof BoatItem
+                || item instanceof MinecartItem
+                || item instanceof ArmorStandItem
+                || item instanceof HangingEntityItem
+                || item.isEdible()) {
+            return false;
+        }
+        if (stack.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY).isPresent()
+                || stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).isPresent()) {
+            return false;
+        }
+
+        // 5. They look like they're good
+        if (item instanceof TieredItem
+                || item instanceof ShootableItem
+                || item instanceof TridentItem
+                || item instanceof ShieldItem
+                || item instanceof ShearsItem
+                || item instanceof FishingRodItem
+                || item instanceof FlintAndSteelItem
+                || item instanceof OnAStickItem
+                || item instanceof ElytraItem) {
+            return true;
+        }
+        if (!stack.getToolTypes().isEmpty()) {
+            return true;
+        }
+        Multimap<Attribute, AttributeModifier> modifiers = stack.getAttributeModifiers(EquipmentSlotType.MAINHAND);
+        if (modifiers.containsKey(Attributes.ATTACK_DAMAGE)
+                || modifiers.containsKey(ForgeMod.REACH_DISTANCE.get())) {
+            return true;
+        }
+        if (stack.getDestroySpeed(Blocks.STONE.defaultBlockState()) > 1.0F
+                || stack.getDestroySpeed(Blocks.DIRT.defaultBlockState()) > 1.0F
+                || stack.getDestroySpeed(Blocks.OAK_PLANKS.defaultBlockState()) > 1.0F) {
+            return true;
+        }
+        if (stack.isDamageableItem()) {
+            return true;
+        }
+        if (stack.getCapability(CapabilityEnergy.ENERGY).isPresent()) {
+            return true;
+        }
+
+        return EnchantmentType.WEAPON.canEnchant(item)
+                || EnchantmentType.DIGGER.canEnchant(item)
+                || EnchantmentType.BOW.canEnchant(item)
+                || EnchantmentType.CROSSBOW.canEnchant(item)
+                || EnchantmentType.TRIDENT.canEnchant(item)
+                || EnchantmentType.FISHING_ROD.canEnchant(item);
     }
 
     public static boolean designateMainHand(ServerPlayerEntity player) {
@@ -118,6 +200,10 @@ public class PossessionHelper {
      * Handles pressing the summon/dismiss keybind (default X).
      */
     public static void toggleSummon(ServerPlayerEntity player) {
+        // Prevent summoning/dismissing while a workstation GUI is open
+        if (player.containerMenu != player.inventoryMenu) {
+            return;
+        }
         player.getCapability(RaceCapability.INSTANCE).ifPresent(data -> {
             if (data.getRace() != Race.CHERUB || data.getPossession().isEmpty()) {
                 return;

@@ -7,6 +7,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.SSetSlotPacket;
 import org.lullaby.cherubmod.capability.IRaceData;
 import org.lullaby.cherubmod.capability.RaceCapability;
+import org.lullaby.cherubmod.possession.PossessionContainerRules;
 import org.lullaby.cherubmod.possession.PossessionHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -40,13 +41,19 @@ public abstract class ServerPlayerEntityMixin {
         boolean shouldDelete = false;
 
         if (slot.container != player.inventory) {
-            // Moved outside player inventory (chest, furnace, crafting grid, etc.): sync if valid, then delete
-            if (isCurrent) {
+            if (!isCurrent) {
+                // Stale or foreign copy in any external slot: always delete
+                shouldDelete = true;
+            } else if (PossessionContainerRules.isAllowedWorkstationSlot(player, container, slotIndex)) {
+                // Valid copy in an allowed upgrade workstation: keep it in the slot,
                 data.setPossession(PossessionHelper.stripPossessionTag(stack));
+            } else {
+                // Chest, hopper, furnace, discharge station, crafting table, or sacrifice slot: sync & dismiss
+                data.setPossession(PossessionHelper.stripPossessionTag(stack));
+                shouldDelete = true;
             }
-            shouldDelete = true;
         } else if (!isCurrent) {
-            // Stale or foreign possession copy inside player inventory: delete immediately
+            // Stale or foreign copy inside player inventory: delete immediately
             shouldDelete = true;
         }
 

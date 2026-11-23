@@ -104,15 +104,31 @@ public class PossessionEvents {
 
     @SubscribeEvent
     public static void onContainerClose(PlayerContainerEvent.Close event) {
-        if (event.getPlayer().level.isClientSide) {
+        if (!(event.getPlayer() instanceof ServerPlayerEntity)) {
             return;
         }
+        ServerPlayerEntity player = (ServerPlayerEntity) event.getPlayer();
+        boolean dismissed = false;
+
         for (Slot slot : event.getContainer().slots) {
-            if (slot.container != event.getPlayer().inventory && PossessionHelper.isPossessionStack(slot.getItem())) {
-                slot.set(ItemStack.EMPTY);
-                ServerPlayerEntity serverPlayer = (ServerPlayerEntity) event.getPlayer();
-                CherubNetwork.sendPossessionParticles(serverPlayer, false);
+            if (slot.container == player.inventory) {
+                continue;
             }
+            ItemStack stack = slot.getItem();
+            if (PossessionHelper.isPossessionStack(stack)) {
+                player.getCapability(RaceCapability.INSTANCE).ifPresent(data -> {
+                    if (PossessionHelper.isCurrentValidCopy(stack, player, data)) {
+                        data.setPossession(PossessionHelper.stripPossessionTag(stack));
+                    }
+                });
+                slot.set(ItemStack.EMPTY);
+                dismissed = true;
+            }
+        }
+
+        if (dismissed) {
+            CherubNetwork.syncToTrackingAndSelf(player);
+            CherubNetwork.sendPossessionParticles(player, false);
         }
     }
 
@@ -159,7 +175,7 @@ public class PossessionEvents {
         if (event.getHand() == Hand.MAIN_HAND
                 && event.getPlayer().getOffhandItem().getItem() instanceof VapeItem) {
             // Prevents main-hand tools/blocks (shovels, axes, flint & steel, etc.) from intercepting
-            // while still allowing you to open chests, doors, and buttons normally.
+            // while still allow opening chests, doors, and buttons normally.
             event.setUseItem(Event.Result.DENY);
         }
     }
