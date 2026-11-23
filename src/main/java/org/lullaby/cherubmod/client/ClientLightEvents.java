@@ -1,9 +1,12 @@
 package org.lullaby.cherubmod.client;
 
+import it.unimi.dsi.fastutil.longs.LongIterator;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.SectionPos;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.event.TickEvent;
@@ -23,6 +26,7 @@ import java.util.Set;
 @Mod.EventBusSubscriber(modid = Cherubmod.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientLightEvents {
     private static final Map<Integer, BlockPos> LAST_POSITIONS = new HashMap<>();
+    private static final LongOpenHashSet DIRTY_SECTIONS = new LongOpenHashSet();
 
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event) {
@@ -32,15 +36,14 @@ public class ClientLightEvents {
         Minecraft mc = Minecraft.getInstance();
         ClientWorld world = mc.level;
         if (world == null) {
-            if (!LAST_POSITIONS.isEmpty()) {
-                LAST_POSITIONS.clear();
-                CherubLightManager.clearClient();
+            if (!LAST_POSITIONS.isEmpty() || !DIRTY_SECTIONS.isEmpty()) {
+                onClientLogout(null);
             }
             return;
         }
 
-        // Update every 4 ticks to keep chunk rebuilds smooth while sprinting
-        if ((world.getGameTime() & 2L) != 0L) {
+        // Run every 4 ticks
+        if ((world.getGameTime() & 3L) != 0L) {
             return;
         }
 
@@ -67,10 +70,10 @@ public class ClientLightEvents {
 
             if (previous == null) {
                 LAST_POSITIONS.put(id, current);
-                markLightBoxDirty(mc, current, current, r);
+                collectDirtySections(current, current, r);
             } else if (!previous.equals(current)) {
                 LAST_POSITIONS.put(id, current);
-                markLightBoxDirty(mc, previous, current, r);
+                collectDirtySections(previous, current, r);
             }
         }
 
@@ -79,19 +82,22 @@ public class ClientLightEvents {
             Map.Entry<Integer, BlockPos> entry = it.next();
             if (!activeIds.contains(entry.getKey())) {
                 BlockPos oldPos = entry.getValue();
-                markLightBoxDirty(mc, oldPos, oldPos, r);
+                collectDirtySections(oldPos, oldPos, r);
                 it.remove();
             }
         }
+
+        flushDirtySections(mc);
     }
 
     @SubscribeEvent
     public static void onClientLogout(ClientPlayerNetworkEvent.LoggedOutEvent event) {
         LAST_POSITIONS.clear();
+        DIRTY_SECTIONS.clear();
         CherubLightManager.clearClient();
     }
 
-    private static void markLightBoxDirty(Minecraft mc, BlockPos a, BlockPos b, int radius) {
+    private static void collectDirtySections(BlockPos a, BlockPos b, int radius) {
         int minSecX = (Math.min(a.getX(), b.getX()) - radius - 1) >> 4;
         int minSecY = Math.max(0, (Math.min(a.getY(), b.getY()) - radius - 1) >> 4);
         int minSecZ = (Math.min(a.getZ(), b.getZ()) - radius - 1) >> 4;
@@ -102,9 +108,25 @@ public class ClientLightEvents {
         for (int sx = minSecX; sx <= maxSecX; sx++) {
             for (int sy = minSecY; sy <= maxSecY; sy++) {
                 for (int sz = minSecZ; sz <= maxSecZ; sz++) {
-                    mc.levelRenderer.setSectionDirty(sx, sy, sz);
+                    DIRTY_SECTIONS.add(SectionPos.asLong(sx, sy, sz));
                 }
             }
         }
+    }
+
+    private static void flushDirtySections(Minecraft mc) {
+        if (DIRTY_SECTIONS.isEmpty()) {
+            return;
+        }
+        LongIterator it = DIRTY_SECTIONS.iterator();
+        while (it.hasNext()) {
+            long packed = it.nextLong();
+            mc.levelRenderer.setSectionDirty(
+                    SectionPos.x(packed),
+                    SectionPos.y(packed),
+                    SectionPos.z(packed)
+            );
+        }
+        DIRTY_SECTIONS.clear();
     }
 }
