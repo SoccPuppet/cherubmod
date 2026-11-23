@@ -20,5 +20,9 @@ public interface IRaceData {
     List<ItemStack> getHoveringItems();
     void setHoveringItems(List<ItemStack> hoveringItems);
 
+    long getPossessionGeneration();
+    void setPossessionGeneration(long generation);
+    long incrementPossessionGeneration();
+
     void copyFrom(IRaceData raceData);
 }

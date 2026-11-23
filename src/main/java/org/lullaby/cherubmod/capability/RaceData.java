@@ -11,6 +11,22 @@ public class RaceData implements IRaceData{
     private boolean pendingRaceChange = false;
     private ItemStack possession = ItemStack.EMPTY;
     private final List<ItemStack> hoveringItems = new ArrayList<>();
+    private long possessionGeneration = 0L;
+
+    @Override
+    public long getPossessionGeneration() {
+        return possessionGeneration;
+    }
+
+    @Override
+    public void setPossessionGeneration(long generation) {
+        this.possessionGeneration = generation;
+    }
+
+    @Override
+    public long incrementPossessionGeneration() {
+        return ++this.possessionGeneration;
+    }
 
     @Override
     public Race getRace() {
@@ -54,6 +70,7 @@ public class RaceData implements IRaceData{
         this.pendingRaceChange = raceData.isPendingRaceChange();
         this.possession = raceData.getPossession();
         this.setHoveringItems(raceData.getHoveringItems());
+        this.possessionGeneration = raceData.getPossessionGeneration();
     }
 
     @Override

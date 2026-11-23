@@ -6,7 +6,8 @@
   "refmap": "cherubmod.refmap.json",
   "mixins": [
     "LightEngineMixin",
-    "PlayerEntityMixin"
+    "PlayerEntityMixin",
+    "ServerPlayerEntityMixin"
   ],
   "client": [
     "WorldRendererMixin"
