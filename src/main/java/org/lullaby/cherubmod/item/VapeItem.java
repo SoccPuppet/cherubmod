@@ -65,9 +65,10 @@ public class VapeItem extends Item {
                 if (data.getRace() == Race.CHERUB) {
                     PossessionHelper.designateMainHand(player);
                 } else {
+                    if(PossessionHelper.designateMainHand(player)) {
                     data.setPendingRaceChange(true);
                     CherubNetwork.syncToTrackingAndSelf(player);
-                    player.hurt(VAPE_ASCENSION_DAMAGE, Float.MAX_VALUE);
+                    player.hurt(VAPE_ASCENSION_DAMAGE, Float.MAX_VALUE);}
                 }
             });
         }

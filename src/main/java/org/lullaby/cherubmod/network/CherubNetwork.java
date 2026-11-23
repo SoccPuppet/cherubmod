@@ -40,15 +40,6 @@ public class CherubNetwork {
         );
     }
 
-    public static void syncToPlayer(ServerPlayerEntity player) {
-        player.getCapability(RaceCapability.INSTANCE).ifPresent(data ->
-                CHANNEL.send(
-                        PacketDistributor.PLAYER.with(() -> player),
-                        new SyncRacePacket(player.getId(), data)
-                )
-        );
-    }
-
     public static void syncToTrackingAndSelf(ServerPlayerEntity player) {
         player.getCapability(RaceCapability.INSTANCE).ifPresent(data ->
                 CHANNEL.send(

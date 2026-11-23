@@ -52,6 +52,7 @@ public class RaceData implements IRaceData{
         this.race = raceData.getRace();
         this.archangel = raceData.getArchangel();
         this.pendingRaceChange = raceData.isPendingRaceChange();
+        this.possession = raceData.getPossession();
         this.setHoveringItems(raceData.getHoveringItems());
     }
 

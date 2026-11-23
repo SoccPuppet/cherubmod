@@ -12,6 +12,7 @@ import org.lullaby.cherubmod.capability.Archangel;
 import org.lullaby.cherubmod.capability.Race;
 import org.lullaby.cherubmod.capability.RaceCapability;
 import org.lullaby.cherubmod.network.CherubNetwork;
+import org.lullaby.cherubmod.possession.PossessionHelper;
 
 public class SwitchedCommand {
     public static final DamageSource ASCENSION_DAMAGE = new DamageSource("cherubification") {
@@ -35,7 +36,7 @@ public class SwitchedCommand {
 
         player.getCapability(RaceCapability.INSTANCE).ifPresent(data -> {
             data.setPendingRaceChange(true);
-            CherubNetwork.syncToPlayer(player);
+            CherubNetwork.syncToTrackingAndSelf(player);
         });
 
         player.hurt(ASCENSION_DAMAGE, Float.MAX_VALUE);
@@ -57,10 +58,11 @@ public class SwitchedCommand {
         ServerPlayerEntity player = context.getSource().getPlayerOrException();
 
         player.getCapability(RaceCapability.INSTANCE).ifPresent(data -> {
+            PossessionHelper.ejectPossession(player, data);
             data.setRace(Race.NONE);
             data.setArchangel(Archangel.NONE);
             data.setPendingRaceChange(false);
-            CherubNetwork.syncToPlayer(player);
+            CherubNetwork.syncToTrackingAndSelf(player);
         });
 
         player.getCapability(RaceCapability.INSTANCE).ifPresent(data ->

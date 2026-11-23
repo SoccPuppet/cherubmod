@@ -38,36 +38,47 @@ public class PossessionHelper {
         return copy;
     }
 
-    public static void designateMainHand(ServerPlayerEntity player) {
+    public static void ejectPossession(ServerPlayerEntity player, IRaceData data) {
+        if (data.getPossession().isEmpty()) {
+            return;
+        }
+
+        syncLivePossessionFromInventory(player, data);
+        removeAllPossessionStacks(player);
+
+        ItemStack oldItem = stripPossessionTag(data.getPossession());
+        ItemEntity dropped = new ItemEntity(
+                player.level,
+                player.getX(),
+                player.getY() + 0.1D,
+                player.getZ(),
+                oldItem
+        );
+        dropped.setDeltaMovement(0.0D, 0.0D, 0.0D);
+        dropped.setPickUpDelay(20);
+        player.level.addFreshEntity(dropped);
+
+        data.setPossession(ItemStack.EMPTY);
+    }
+
+    public static boolean isValidForDesignation(ItemStack stack) {
+        return !stack.isEmpty() && stack.getCount() == 1 && !isPossessionStack(stack);
+    }
+
+    public static boolean designateMainHand(ServerPlayerEntity player) {
         ItemStack mainHand = player.getMainHandItem();
 
-        if (mainHand.isEmpty() || mainHand.getCount() != 1
-                || mainHand.getMaxStackSize() != 1 || isPossessionStack(mainHand)) {
+        if (!isValidForDesignation(mainHand)) {
             player.displayClientMessage(
                     new StringTextComponent("You must designate your possession, an unstackable item."),
                     true
             );
-            return;
+            return false;
         }
 
         player.getCapability(RaceCapability.INSTANCE).ifPresent(data -> {
             // 1. Eject existing possession beneath the player if one exists
-            if (!data.getPossession().isEmpty()) {
-                syncLivePossessionFromInventory(player, data);
-                removeAllPossessionStacks(player);
-
-                ItemStack oldItem = stripPossessionTag(data.getPossession());
-                ItemEntity dropped = new ItemEntity(
-                        player.level,
-                        player.getX(),
-                        player.getY() + 0.1D,
-                        player.getZ(),
-                        oldItem
-                );
-                dropped.setDeltaMovement(0.0D, 0.0D, 0.0D);
-                dropped.setPickUpDelay(5);
-                player.level.addFreshEntity(dropped);
-            }
+            ejectPossession(player, data);
 
             // 2. Bind the new main-hand item
             ItemStack cleanNew = stripPossessionTag(mainHand);
@@ -80,6 +91,7 @@ public class PossessionHelper {
                     true
             );
         });
+        return true;
     }
 
     /**

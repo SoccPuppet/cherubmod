@@ -7,16 +7,20 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ActionResultType;
+import net.minecraft.util.Hand;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.event.entity.player.PlayerContainerEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.lullaby.cherubmod.Cherubmod;
 import org.lullaby.cherubmod.capability.RaceCapability;
+import org.lullaby.cherubmod.item.VapeItem;
 import org.lullaby.cherubmod.network.CherubNetwork;
 import org.lullaby.cherubmod.possession.PossessionHelper;
 
@@ -131,6 +135,25 @@ public class PossessionEvents {
                     (ServerPlayerEntity) event.getTarget(),
                     (ServerPlayerEntity) event.getPlayer()
             );
+        }
+    }
+
+    @SubscribeEvent
+    public static void onRightClickItem(PlayerInteractEvent.RightClickItem event) {
+        if (event.getHand() == Hand.MAIN_HAND
+                && event.getPlayer().getOffhandItem().getItem() instanceof VapeItem) {
+            event.setCanceled(true);
+            event.setCancellationResult(ActionResultType.PASS);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
+        if (event.getHand() == Hand.MAIN_HAND
+                && event.getPlayer().getOffhandItem().getItem() instanceof VapeItem) {
+            // Prevents main-hand tools/blocks (shovels, axes, flint & steel, etc.) from intercepting
+            // while still allowing you to open chests, doors, and buttons normally.
+            event.setUseItem(Event.Result.DENY);
         }
     }
 }
