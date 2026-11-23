@@ -1,17 +1,22 @@
 package org.lullaby.cherubmod.capability;
 
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class RaceCapability {
     @CapabilityInject(IRaceData.class)
@@ -28,6 +33,8 @@ public class RaceCapability {
         private static final String KEY_RACE = "Race";
         private static final String KEY_ARCHANGEL = "Archangel";
         private static final String KEY_PENDING_RACECHANGE = "PendingRaceChange";
+        private static final String KEY_POSSESSION = "Possession";
+        private static final String KEY_HOVERINGITEMS = "HoveringItems";
 
         @Nullable
         @Override
@@ -36,6 +43,16 @@ public class RaceCapability {
             tag.putString(KEY_RACE, instance.getRace().toString());
             tag.putString(KEY_ARCHANGEL, instance.getArchangel().toString());
             tag.putBoolean(KEY_PENDING_RACECHANGE, instance.isPendingRaceChange());
+            if(!instance.getPossession().isEmpty()){
+                tag.put(KEY_POSSESSION, instance.getPossession().save(new CompoundNBT()));
+            }
+            ListNBT hoverList = new ListNBT();
+            for (ItemStack stack : instance.getHoveringItems()) {
+                if (!stack.isEmpty()) {
+                    hoverList.add(stack.save(new CompoundNBT()));
+                }
+            }
+            tag.put(KEY_HOVERINGITEMS, hoverList);
             return tag;
         }
 
@@ -57,6 +74,22 @@ public class RaceCapability {
                 instance.setArchangel(Archangel.NONE);
             }
             instance.setPendingRaceChange(tag.getBoolean(KEY_PENDING_RACECHANGE));
+
+            if(tag.contains(KEY_POSSESSION, Constants.NBT.TAG_COMPOUND)){
+                instance.setPossession(ItemStack.of(tag.getCompound(KEY_POSSESSION)));
+            }
+
+            List<ItemStack> loadHoveringItems = new ArrayList<>();
+            if(tag.contains(KEY_HOVERINGITEMS, Constants.NBT.TAG_LIST)){
+                ListNBT list =  tag.getList(KEY_HOVERINGITEMS, Constants.NBT.TAG_COMPOUND);
+                for(int i = 0; i < list.size(); i++){
+                    ItemStack stack = ItemStack.of(list.getCompound(i));
+                    if(!stack.isEmpty()){
+                        loadHoveringItems.add(stack);
+                    }
+                }
+            }
+            instance.setHoveringItems(loadHoveringItems);
         }
     }
 

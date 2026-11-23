@@ -8,7 +8,6 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.GameRules;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.living.LivingExperienceDropEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -87,7 +86,7 @@ public class RaceEvent {
     @SubscribeEvent
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getPlayer() instanceof ServerPlayerEntity) {
-            CherubNetwork.syncToPlayer((ServerPlayerEntity) event.getPlayer());
+            CherubNetwork.syncToTrackingAndSelf((ServerPlayerEntity) event.getPlayer());
         }
     }
 
@@ -95,7 +94,7 @@ public class RaceEvent {
     public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
         if (event.getPlayer() instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.getPlayer();
-            CherubNetwork.syncToPlayer(player);
+            CherubNetwork.syncToTrackingAndSelf(player);
 
             // Helpful verification for testing /switched on
             player.getCapability(RaceCapability.INSTANCE).ifPresent(data ->
@@ -110,7 +109,7 @@ public class RaceEvent {
     @SubscribeEvent
     public static void onPlayerChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
         if (event.getPlayer() instanceof ServerPlayerEntity) {
-            CherubNetwork.syncToPlayer((ServerPlayerEntity) event.getPlayer());
+            CherubNetwork.syncToTrackingAndSelf((ServerPlayerEntity) event.getPlayer());
         }
     }
 

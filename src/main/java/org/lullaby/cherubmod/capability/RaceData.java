@@ -1,9 +1,16 @@
 package org.lullaby.cherubmod.capability;
 
+import net.minecraft.item.ItemStack;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public class RaceData implements IRaceData{
     private Race race = Race.NONE;
     private Archangel archangel = Archangel.NONE;
     private boolean pendingRaceChange = false;
+    private ItemStack possession = ItemStack.EMPTY;
+    private final List<ItemStack> hoveringItems = new ArrayList<>();
 
     @Override
     public Race getRace() {
@@ -45,5 +52,31 @@ public class RaceData implements IRaceData{
         this.race = raceData.getRace();
         this.archangel = raceData.getArchangel();
         this.pendingRaceChange = raceData.isPendingRaceChange();
+        this.setHoveringItems(raceData.getHoveringItems());
+    }
+
+    @Override
+    public List<ItemStack> getHoveringItems() {
+        return hoveringItems;
+    }
+    @Override
+    public void setHoveringItems(List<ItemStack> hoveringItems) {
+        this.hoveringItems.clear();
+        if(hoveringItems != null){
+            for(ItemStack hoveringItem : hoveringItems){
+                if(hoveringItem != null && !hoveringItem.isEmpty()){
+                    this.hoveringItems.add(hoveringItem);
+                }
+            }
+        }
+    }
+
+    @Override
+    public ItemStack getPossession() {
+        return possession;
+    }
+    @Override
+    public void setPossession(ItemStack possession) {
+        this.possession = possession;
     }
 }

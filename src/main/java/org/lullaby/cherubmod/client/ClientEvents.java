@@ -1,0 +1,88 @@
+package org.lullaby.cherubmod.client;
+
+import com.mojang.blaze3d.matrix.MatrixStack;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.model.ItemCameraTransforms;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.vector.Vector3f;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.FOVUpdateEvent;
+import net.minecraftforge.client.event.RenderPlayerEvent;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import org.lullaby.cherubmod.Cherubmod;
+import org.lullaby.cherubmod.capability.RaceCapability;
+import org.lullaby.cherubmod.item.VapeItem;
+import org.lullaby.cherubmod.network.CherubNetwork;
+import org.lullaby.cherubmod.network.TogglePossessionPacket;
+
+import java.util.List;
+
+@Mod.EventBusSubscriber(modid = Cherubmod.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
+public class ClientEvents {
+
+    @SubscribeEvent
+    public static void onFovUpdate(FOVUpdateEvent event) {
+        PlayerEntity player = event.getEntity();
+        if (player.isUsingItem() && player.getUseItem().getItem() instanceof VapeItem) {
+            float progress = MathHelper.clamp(
+                    (float) player.getTicksUsingItem() / (float) VapeItem.CHANNEL_TICKS,
+                    0.0F,
+                    1.0F
+            );
+            // Smoothly lowers FOV down to 65% of normal over 2.5 seconds
+            event.setNewfov(event.getFov() * (1.0F - 0.35F * progress));
+        }
+    }
+
+    @SubscribeEvent
+    public static void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END || Minecraft.getInstance().player == null) {
+            return;
+        }
+        while (ClientSetup.SUMMON_POSSESSION != null && ClientSetup.SUMMON_POSSESSION.consumeClick()) {
+            CherubNetwork.CHANNEL.sendToServer(new TogglePossessionPacket());
+        }
+    }
+
+    @SubscribeEvent
+    public static void onRenderPlayerPost(RenderPlayerEvent.Post event) {
+        PlayerEntity player = event.getPlayer();
+        player.getCapability(RaceCapability.INSTANCE).ifPresent(data -> {
+            List<ItemStack> hovering = data.getHoveringItems();
+            if (hovering.isEmpty()) {
+                return;
+            }
+
+            MatrixStack matrixStack = event.getMatrixStack();
+            IRenderTypeBuffer buffer = event.getBuffers();
+            int light = event.getLight();
+            float time = player.tickCount + event.getPartialRenderTick();
+
+            // Render the first (or stacked) hovering item(s) floating above the player's head
+            for (int i = 0; i < hovering.size(); i++) {
+                ItemStack stack = hovering.get(i);
+                matrixStack.pushPose();
+                float bob = MathHelper.sin((time + i * 10.0F) * 0.1F) * 0.08F;
+                matrixStack.translate(0.0D, player.getBbHeight() + 0.55D + (i * 0.35D) + bob, 0.0D);
+                matrixStack.mulPose(Vector3f.YP.rotationDegrees(time * 2.5F + i * 45.0F));
+                matrixStack.scale(0.65F, 0.65F, 0.65F);
+
+                Minecraft.getInstance().getItemRenderer().renderStatic(
+                        stack,
+                        ItemCameraTransforms.TransformType.GROUND,
+                        light,
+                        OverlayTexture.NO_OVERLAY,
+                        matrixStack,
+                        buffer
+                );
+                matrixStack.popPose();
+            }
+        });
+    }
+}
