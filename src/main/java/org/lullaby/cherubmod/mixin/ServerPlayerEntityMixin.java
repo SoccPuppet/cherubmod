@@ -7,6 +7,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.SSetSlotPacket;
 import org.lullaby.cherubmod.capability.IRaceData;
 import org.lullaby.cherubmod.capability.RaceCapability;
+import org.lullaby.cherubmod.network.CherubNetwork;
 import org.lullaby.cherubmod.possession.PossessionContainerRules;
 import org.lullaby.cherubmod.possession.PossessionHelper;
 import org.spongepowered.asm.mixin.Mixin;
@@ -59,6 +60,7 @@ public abstract class ServerPlayerEntityMixin {
 
         if (shouldDelete) {
             slot.set(ItemStack.EMPTY);
+            CherubNetwork.sendPossessionParticles(player, false);
             if (!player.ignoreSlotUpdateHack) {
                 player.connection.send(new SSetSlotPacket(container.containerId, slotIndex, ItemStack.EMPTY));
             }

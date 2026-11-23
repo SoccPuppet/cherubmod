@@ -36,22 +36,6 @@ public class PossessionEvents {
         }
         ServerPlayerEntity player = (ServerPlayerEntity) event.player;
 
-        // 1. Delete possession if moved into any non-player-inventory slot (crafting, furnace, chest, etc.)
-        if (player.containerMenu != null) {
-            for (Slot slot : player.containerMenu.slots) {
-                if (slot.container != player.inventory && PossessionHelper.isPossessionStack(slot.getItem())) {
-                    ItemStack moved = slot.getItem();
-                    player.getCapability(RaceCapability.INSTANCE).ifPresent(data ->
-                            data.setPossession(PossessionHelper.stripPossessionTag(moved))
-                    );
-                    slot.set(ItemStack.EMPTY);
-                    player.containerMenu.broadcastChanges();
-                    CherubNetwork.sendPossessionParticles(player, false);
-                }
-            }
-        }
-
-        // 2. Sync live durability/NBT and try returning hovering items when a slot opens
         player.getCapability(RaceCapability.INSTANCE).ifPresent(data -> {
             PossessionHelper.syncLivePossessionFromInventory(player, data);
 
