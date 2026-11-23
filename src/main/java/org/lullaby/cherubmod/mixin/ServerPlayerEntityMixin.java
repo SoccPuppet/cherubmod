@@ -47,7 +47,9 @@ public abstract class ServerPlayerEntityMixin {
                 shouldDelete = true;
             } else if (PossessionContainerRules.isAllowedWorkstationSlot(player, container, slotIndex)) {
                 // Valid copy in an allowed upgrade workstation: keep it in the slot,
-                data.setPossession(PossessionHelper.stripPossessionTag(stack));
+                if (!PossessionContainerRules.isPreviewOutputSlot(container, slotIndex)) {
+                    data.setPossession(PossessionHelper.stripPossessionTag(stack));
+                }
             } else {
                 // Chest, hopper, furnace, discharge station, crafting table, or sacrifice slot: sync & dismiss
                 data.setPossession(PossessionHelper.stripPossessionTag(stack));
@@ -56,6 +58,9 @@ public abstract class ServerPlayerEntityMixin {
         } else if (!isCurrent) {
             // Stale or foreign copy inside player inventory: delete immediately
             shouldDelete = true;
+        }else {
+            // True copy inside the player inventory: update
+            data.setPossession(PossessionHelper.stripPossessionTag(stack));
         }
 
         if (shouldDelete) {

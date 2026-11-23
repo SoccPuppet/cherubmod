@@ -48,6 +48,12 @@ public class PossessionContainerRules {
         return CherubServerConfig.isAllowedWorkstation(typeId);
     }
 
+    public static boolean isPreviewOutputSlot(Container container, int slotIndex) {
+        return slotIndex == 2 && (container instanceof RepairContainer
+                || container instanceof SmithingTableContainer
+                || container instanceof GrindstoneContainer);
+    }
+
     private static ResourceLocation getContainerTypeId(Container container) {
         try {
             ContainerType<?> type = container.getType();
