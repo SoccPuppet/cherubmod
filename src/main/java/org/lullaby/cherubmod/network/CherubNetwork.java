@@ -12,7 +12,7 @@ import org.lullaby.cherubmod.capability.RaceCapability;
 import java.util.Optional;
 
 public class CherubNetwork {
-    private static final String PROTOCOL_VERSION = "2";
+    private static final String PROTOCOL_VERSION = "3";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(Cherubmod.MOD_ID, "main"),
             () -> PROTOCOL_VERSION,
@@ -37,6 +37,21 @@ public class CherubNetwork {
                 TogglePossessionPacket::decode,
                 TogglePossessionPacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_SERVER)
+        );
+        CHANNEL.registerMessage(
+                id++,
+                PossessionParticlePacket.class,
+                PossessionParticlePacket::encode,
+                PossessionParticlePacket::decode,
+                PossessionParticlePacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_CLIENT)
+        );
+    }
+
+    public static void sendPossessionParticles(ServerPlayerEntity player, boolean summon) {
+        CHANNEL.send(
+                PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> player),
+                new PossessionParticlePacket(player.getId(), summon)
         );
     }
 

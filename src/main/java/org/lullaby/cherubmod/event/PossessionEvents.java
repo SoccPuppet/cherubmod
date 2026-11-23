@@ -46,6 +46,7 @@ public class PossessionEvents {
                     );
                     slot.set(ItemStack.EMPTY);
                     player.containerMenu.broadcastChanges();
+                    CherubNetwork.sendPossessionParticles(player, false);
                 }
             }
         }
@@ -78,10 +79,12 @@ public class PossessionEvents {
         ItemStack stack = event.getEntityItem().getItem();
         if (PossessionHelper.isPossessionStack(stack)) {
             PlayerEntity player = event.getPlayer();
-            if (!player.level.isClientSide) {
-                player.getCapability(RaceCapability.INSTANCE).ifPresent(data ->
+            if (player instanceof ServerPlayerEntity) {
+                ServerPlayerEntity serverPlayer = (ServerPlayerEntity) player;
+                serverPlayer.getCapability(RaceCapability.INSTANCE).ifPresent(data ->
                         data.setPossession(PossessionHelper.stripPossessionTag(stack))
                 );
+                CherubNetwork.sendPossessionParticles(serverPlayer, false);
             }
             event.getEntityItem().remove();
             event.setCanceled(true);
@@ -107,6 +110,8 @@ public class PossessionEvents {
         for (Slot slot : event.getContainer().slots) {
             if (slot.container != event.getPlayer().inventory && PossessionHelper.isPossessionStack(slot.getItem())) {
                 slot.set(ItemStack.EMPTY);
+                ServerPlayerEntity serverPlayer = (ServerPlayerEntity) event.getPlayer();
+                CherubNetwork.sendPossessionParticles(serverPlayer, false);
             }
         }
     }
@@ -122,6 +127,8 @@ public class PossessionEvents {
                             data.setPossession(PossessionHelper.stripPossessionTag(held))
                     );
                     event.getPlayer().setItemInHand(event.getHand(), ItemStack.EMPTY);
+                    ServerPlayerEntity serverPlayer =  (ServerPlayerEntity) event.getPlayer();
+                    CherubNetwork.sendPossessionParticles(serverPlayer, false);
                 }
                 event.setCanceled(true);
             }

@@ -110,6 +110,7 @@ public class PossessionHelper {
                 data.setPossession(stripPossessionTag(mainHand));
                 player.setItemInHand(Hand.MAIN_HAND, ItemStack.EMPTY);
                 CherubNetwork.syncToTrackingAndSelf(player);
+                CherubNetwork.sendPossessionParticles(player, false);
                 return;
             }
 
@@ -129,6 +130,7 @@ public class PossessionHelper {
             }
 
             CherubNetwork.syncToTrackingAndSelf(player);
+            CherubNetwork.sendPossessionParticles(player, true);
         });
     }
 

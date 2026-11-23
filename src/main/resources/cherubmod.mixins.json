@@ -5,9 +5,11 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "cherubmod.refmap.json",
   "mixins": [
+    "LightEngineMixin",
     "PlayerEntityMixin"
   ],
   "client": [
+    "WorldRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
