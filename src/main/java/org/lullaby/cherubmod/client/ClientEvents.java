@@ -9,10 +9,14 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3f;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.lullaby.cherubmod.Cherubmod;
@@ -20,6 +24,7 @@ import org.lullaby.cherubmod.capability.RaceCapability;
 import org.lullaby.cherubmod.item.VapeItem;
 import org.lullaby.cherubmod.network.CherubNetwork;
 import org.lullaby.cherubmod.network.TogglePossessionPacket;
+import org.lullaby.cherubmod.possession.PossessionHelper;
 
 import java.util.List;
 
@@ -48,6 +53,22 @@ public class ClientEvents {
         while (ClientSetup.SUMMON_POSSESSION != null && ClientSetup.SUMMON_POSSESSION.consumeClick()) {
             CherubNetwork.CHANNEL.sendToServer(new TogglePossessionPacket());
         }
+    }
+
+    @SubscribeEvent
+    public static void onItemTooltip(ItemTooltipEvent event) {
+        if (!PossessionHelper.isPossessionStack(event.getItemStack())) {
+            return;
+        }
+
+        List<ITextComponent> tooltip = event.getToolTip();
+        ITextComponent line = new TranslationTextComponent("tooltip.cherubmod.possession")
+                .withStyle(TextFormatting.GOLD, TextFormatting.BOLD);
+
+        // Insert directly beneath the item's display name (index 0);
+        // use tooltip.add(line) instead if you prefer it at the bottom.
+        int insertIndex = Math.min(1, tooltip.size());
+        tooltip.add(insertIndex, line);
     }
 
     @SubscribeEvent

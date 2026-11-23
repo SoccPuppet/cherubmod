@@ -2,5 +2,6 @@
   "item.cherubmod.vape": "Vape",
   "death.attack.cherub_vape": "%1$s was turned into a cherub",
   "key.categories.cherubmod": "Cherub Mod",
-  "key.cherubmod.summon_possession": "Call Possession"
+  "key.cherubmod.summon_possession": "Call Possession",
+  "tooltip.cherubmod.possession": "One Possession"
 }
