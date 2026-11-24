@@ -18,6 +18,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -41,6 +42,7 @@ public class TarotDeckScreen extends Screen {
     private static final int GRID_ROWS = 5;
     private static final float CARD_ASPECT = 0.68F; // width / height portrait ratio
     private static final int SCROLLBAR_WIDTH = 5;
+    private static final float TITLE_SCALE = 2F;
 
     private static final int COLOR_FRAME = 0xFFFFFFFF;
     private static final int COLOR_INNER_BG = 0xFFECECEC;
@@ -185,16 +187,18 @@ public class TarotDeckScreen extends Screen {
         this.wrappedBody.clear();
 
         int textPad = Math.max(5, Math.min(10, this.textBoxW / 24));
-        int titleWrapW = Math.max(40, this.textBoxW - textPad * 2);
+        int titleWrapW = Math.max(30, (int) Math.floor((this.textBoxW - textPad * 2) / TITLE_SCALE));
         // Reserve room on the right for the scrollbar
         int bodyWrapW = Math.max(40, this.textBoxW - textPad * 2 - SCROLLBAR_WIDTH - 4);
 
         if (this.selectedArcana == null) {
             this.acceptButton.active = false;
-            ITextComponent prompt = new TranslationTextComponent("gui.cherubmod.tarot.select_prompt");
+            ITextComponent prompt = new TranslationTextComponent("gui.cherubmod.tarot.select_prompt")
+                    .withStyle(TextFormatting.BOLD);
             this.wrappedTitle.addAll(this.font.split(prompt, titleWrapW));
         } else {
-            ITextComponent titleComp = new TranslationTextComponent(this.selectedArcana.getNameKey());
+            ITextComponent titleComp = new TranslationTextComponent(this.selectedArcana.getNameKey())
+                    .withStyle(TextFormatting.BOLD);
             this.wrappedTitle.addAll(this.font.split(titleComp, titleWrapW));
 
             if (!this.selectedArcana.isImplemented()) {
@@ -229,7 +233,8 @@ public class TarotDeckScreen extends Screen {
         }
 
         int lineStep = this.font.lineHeight + 2;
-        int titleBlockHeight = textPad + (this.wrappedTitle.size() * lineStep) + 6;
+        int titleLineStep = MathHelper.ceil((this.font.lineHeight + 2) * TITLE_SCALE);
+        int titleBlockHeight = textPad + (this.wrappedTitle.size() * titleLineStep) + 6;
 
         this.bodyClipX = this.textBoxX + textPad;
         this.bodyClipY = this.textBoxY + titleBlockHeight;
@@ -355,11 +360,18 @@ public class TarotDeckScreen extends Screen {
 
         // Centered gold title at the top of the box
         int titleY = this.textBoxY + textPad;
+        int titleLineStep = MathHelper.ceil((this.font.lineHeight + 2) * TITLE_SCALE);
         for (IReorderingProcessor titleLine : this.wrappedTitle) {
-            int lineW = this.font.width(titleLine);
-            float tx = this.textBoxX + (this.textBoxW - lineW) / 2.0F;
-            this.font.drawShadow(matrixStack, titleLine, tx, titleY, COLOR_TITLE_GOLD);
-            titleY += lineStep;
+            float scaledWidth = this.font.width(titleLine) * TITLE_SCALE;
+            float tx = this.textBoxX + (this.textBoxW - scaledWidth) / 2.0F;
+
+            matrixStack.pushPose();
+            matrixStack.translate(tx, titleY, 0.0D);
+            matrixStack.scale(TITLE_SCALE, TITLE_SCALE, 1.0F);
+            this.font.drawShadow(matrixStack, titleLine, 0.0F, 0.0F, COLOR_TITLE_GOLD);
+            matrixStack.popPose();
+
+            titleY += titleLineStep;
         }
 
         // Scissor-clipped scrollable body area (scaled accurately to framebuffer pixels)
