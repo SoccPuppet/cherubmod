@@ -18,6 +18,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lullaby.cherubmod.capability.RaceCapability;
+import org.lullaby.cherubmod.client.hud.CherubHudProviders;
 import org.lullaby.cherubmod.config.CherubServerConfig;
 import org.lullaby.cherubmod.item.ModItems;
 import org.lullaby.cherubmod.network.CherubNetwork;
@@ -40,7 +41,7 @@ public class Cherubmod {
         // Register the processIMC method for modloading
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::processIMC);
         // Register the doClientStuff method for modloading
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::doClientStuff);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientSetup);
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
         ModItems.ITEMS.register(modBus);
         ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, CherubServerConfig.SPEC);
@@ -48,6 +49,10 @@ public class Cherubmod {
 
         // Register ourselves for server and other game events we are interested in
         MinecraftForge.EVENT_BUS.register(this);
+    }
+
+    private void clientSetup(final FMLClientSetupEvent event) {
+        event.enqueueWork(CherubHudProviders::registerDefaults);
     }
 
     private void setup(final FMLCommonSetupEvent event) {
@@ -59,11 +64,6 @@ public class Cherubmod {
             RaceCapability.register();
             CherubNetwork.register();
         });
-    }
-
-    private void doClientStuff(final FMLClientSetupEvent event) {
-        // do something that can only be done on the client
-        LOGGER.info("Got game settings {}", event.getMinecraftSupplier().get().options);
     }
 
     private void enqueueIMC(final InterModEnqueueEvent event) {

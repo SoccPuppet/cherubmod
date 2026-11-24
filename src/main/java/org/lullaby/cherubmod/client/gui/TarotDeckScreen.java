@@ -54,6 +54,11 @@ public class TarotDeckScreen extends Screen {
     private static final int COLOR_BODY_WHITE = 0xFFFFFFFF;
     private static final int COLOR_BODY_MUTED = 0xFF999999;
 
+    // Semantic power-line colors
+    private static final int COLOR_UPSIDE   = 0xFF6EEB83; // Soft green
+    private static final int COLOR_DOWNSIDE = 0xFFFF6B6B; // Soft red
+    private static final int COLOR_TWEAK    = 0xFFFFE066; // Soft amber/gold
+
     // Layout coordinates (recomputed on init / resize / GUI scale change)
     private int panelX, panelY, panelW, panelH;
     private int gridX, gridY, cardW, cardH, cardGap;
@@ -214,11 +219,7 @@ public class TarotDeckScreen extends Screen {
                     if (powerIdx > 1) {
                         this.wrappedBody.add(BodyLine.spacer());
                     }
-                    String raw = I18n.get(this.selectedArcana.getPowerKey(powerIdx));
-                    String formatted = raw.startsWith("- ") ? raw : "- " + raw;
-                    for (IReorderingProcessor line : this.font.split(new StringTextComponent(formatted), bodyWrapW)) {
-                        this.wrappedBody.add(new BodyLine(line, COLOR_BODY_WHITE, false));
-                    }
+                    appendPowerParagraph(I18n.get(this.selectedArcana.getPowerKey(powerIdx)), bodyWrapW);
                     powerIdx++;
                 }
 
@@ -267,6 +268,33 @@ public class TarotDeckScreen extends Screen {
         }
         CherubNetwork.CHANNEL.sendToServer(new SelectArchangelPacket(chosen));
         this.onClose();
+    }
+
+    private void appendPowerParagraph(String raw, int bodyWrapW) {
+        String trimmed = raw.trim();
+        if (trimmed.isEmpty()) {
+            return;
+        }
+
+        int color = COLOR_BODY_WHITE;
+        String formatted;
+
+        if (trimmed.startsWith("[+]")) {
+            color = COLOR_UPSIDE;
+            formatted = "+ " + trimmed.substring(3).trim();
+        } else if (trimmed.startsWith("[-]")) {
+            color = COLOR_DOWNSIDE;
+            formatted = "- " + trimmed.substring(3).trim();
+        } else if (trimmed.startsWith("[~]")) {
+            color = COLOR_TWEAK;
+            formatted = "~ " + trimmed.substring(3).trim();
+        } else {
+            formatted = trimmed.startsWith("* ") ? trimmed : "* " + trimmed;
+        }
+
+        for (IReorderingProcessor line : this.font.split(new StringTextComponent(formatted), bodyWrapW)) {
+            this.wrappedBody.add(new BodyLine(line, color, false));
+        }
     }
 
     @Override

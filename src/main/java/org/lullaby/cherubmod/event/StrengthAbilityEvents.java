@@ -111,7 +111,7 @@ public class StrengthAbilityEvents {
             StrengthPunchDamageSource strengthSource = (StrengthPunchDamageSource) source;
             float damageScale = strengthSource.getDamageScale();
 
-            float rawPunch = (7.0F + 0.05F * target.getHealth()) * damageScale;
+            float rawPunch = (7.0F + 0.06F * target.getHealth()) * damageScale;
             float armor = (float) target.getArmorValue();
             float toughness = (float) target.getAttributeValue(Attributes.ARMOR_TOUGHNESS);
 
