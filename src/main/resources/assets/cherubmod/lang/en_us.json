@@ -3,5 +3,40 @@
   "death.attack.cherub_vape": "%1$s was turned into a cherub",
   "key.categories.cherubmod": "Cherub Mod",
   "key.cherubmod.summon_possession": "Call Possession",
-  "tooltip.cherubmod.possession": "One Possession"
+  "tooltip.cherubmod.possession": "One Possession",
+
+  "item.cherubmod.tarot_deck": "Tarot Deck",
+  "message.cherubmod.tarot.not_cherub": "Only Cherubs may use the Tarot Deck.",
+
+  "gui.cherubmod.tarot.title": "Tarot Deck",
+  "gui.cherubmod.tarot.cancel": "Cancel",
+  "gui.cherubmod.tarot.accept": "Accept",
+  "gui.cherubmod.tarot.select_prompt": "Select an Arcana",
+  "gui.cherubmod.tarot.unimplemented": "Unimplemented",
+  "gui.cherubmod.tarot.no_description": "No powers listed.",
+
+  "archangel.cherubmod.TheFool.name": "The Fool",
+  "archangel.cherubmod.TheMagician.name": "The Magician",
+  "archangel.cherubmod.TheHighPriestess.name": "The High Priestess",
+  "archangel.cherubmod.TheMatriarch.name": "The Matriarch",
+  "archangel.cherubmod.TheSovereign.name": "The Sovereign",
+  "archangel.cherubmod.TheHierophant.name": "The Hierophant",
+  "archangel.cherubmod.TheLovers.name": "The Lovers",
+  "archangel.cherubmod.TheChariot.name": "The Chariot",
+  "archangel.cherubmod.Strength.name": "Strength",
+  "archangel.cherubmod.TheHermit.name": "The Hermit",
+  "archangel.cherubmod.TheWheelOfFortune.name": "The Wheel of Fortune",
+  "archangel.cherubmod.Justice.name": "Justice",
+  "archangel.cherubmod.TheHangedOne.name": "The Hanged One",
+  "archangel.cherubmod.Death.name": "Death",
+  "archangel.cherubmod.Temperance.name": "Temperance",
+  "archangel.cherubmod.TheTower.name": "The Tower",
+  "archangel.cherubmod.TheStar.name": "The Star",
+  "archangel.cherubmod.TheMoon.name": "The Moon",
+  "archangel.cherubmod.TheSun.name": "The Sun",
+  "archangel.cherubmod.Judgement.name": "Judgement",
+  "archangel.cherubmod.TheWorld.name": "The World",
+
+  "archangel.cherubmod.Temperance.1": "First power description here.",
+  "archangel.cherubmod.Temperance.2": "Second power description here. Long paragraphs wrap horizontally and trigger vertical scrolling automatically."
 }

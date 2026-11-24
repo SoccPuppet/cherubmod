@@ -13,4 +13,6 @@ public class ModItems {
 
     public static final RegistryObject<Item> VAPE = ITEMS.register("vape",
             () -> new VapeItem(new Item.Properties().tab(ItemGroup.TAB_MISC).stacksTo(1)));
+    public static final RegistryObject<Item> TAROT_DECK = ITEMS.register("tarot_deck",
+            () -> new TarotDeckItem(new Item.Properties().tab(ItemGroup.TAB_MISC).stacksTo(1)));
 }

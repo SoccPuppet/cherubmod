@@ -12,7 +12,7 @@ import org.lullaby.cherubmod.capability.RaceCapability;
 import java.util.Optional;
 
 public class CherubNetwork {
-    private static final String PROTOCOL_VERSION = "3";
+    private static final String PROTOCOL_VERSION = "4";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(Cherubmod.MOD_ID, "main"),
             () -> PROTOCOL_VERSION,
@@ -45,6 +45,14 @@ public class CherubNetwork {
                 PossessionParticlePacket::decode,
                 PossessionParticlePacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT)
+        );
+        CHANNEL.registerMessage(
+                id++,
+                SelectArchangelPacket.class,
+                SelectArchangelPacket::encode,
+                SelectArchangelPacket::decode,
+                SelectArchangelPacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_SERVER)
         );
     }
 

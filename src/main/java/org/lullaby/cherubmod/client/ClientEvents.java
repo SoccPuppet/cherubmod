@@ -66,7 +66,6 @@ public class ClientEvents {
                 .withStyle(TextFormatting.GOLD, TextFormatting.BOLD);
 
         // Insert directly beneath the item's display name (index 0);
-        // use tooltip.add(line) instead if you prefer it at the bottom.
         int insertIndex = Math.min(1, tooltip.size());
         tooltip.add(insertIndex, line);
     }
