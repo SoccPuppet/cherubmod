@@ -1,5 +1,6 @@
 package org.lullaby.cherubmod.network;
 
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.network.NetworkDirection;
@@ -12,7 +13,7 @@ import org.lullaby.cherubmod.capability.RaceCapability;
 import java.util.Optional;
 
 public class CherubNetwork {
-    private static final String PROTOCOL_VERSION = "4";
+    private static final String PROTOCOL_VERSION = "8";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(Cherubmod.MOD_ID, "main"),
             () -> PROTOCOL_VERSION,
@@ -53,6 +54,45 @@ public class CherubNetwork {
                 SelectArchangelPacket::decode,
                 SelectArchangelPacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_SERVER)
+        );
+        CHANNEL.registerMessage(
+                id++,
+                SpallParticlePacket.class,
+                SpallParticlePacket::encode,
+                SpallParticlePacket::decode,
+                SpallParticlePacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_CLIENT)
+        );
+        CHANNEL.registerMessage(
+                id++,
+                ShockwaveParticlePacket.class,
+                ShockwaveParticlePacket::encode,
+                ShockwaveParticlePacket::decode,
+                ShockwaveParticlePacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_CLIENT)
+        );
+    }
+
+    public static void sendSpallParticles(
+            LivingEntity target,
+            double x, double y, double z,
+            double dirX, double dirY, double dirZ,
+            float entityScale
+    ) {
+        CHANNEL.send(
+                PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> target),
+                new SpallParticlePacket(x, y, z, dirX, dirY, dirZ, entityScale)
+        );
+    }
+
+    public static void sendShockwaveParticles(
+            LivingEntity epicenterEntity,
+            double x, double y, double z,
+            float radius
+    ) {
+        CHANNEL.send(
+                PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> epicenterEntity),
+                new ShockwaveParticlePacket(x, y, z, radius)
         );
     }
 

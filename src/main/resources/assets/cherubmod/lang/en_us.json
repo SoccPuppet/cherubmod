@@ -39,5 +39,9 @@
 
   "archangel.cherubmod.Temperance.1": "First power description here.",
   "archangel.cherubmod.Temperance.2": "Second power description here. Long paragraphs wrap horizontally and trigger vertical scrolling automatically.",
-  "message.cherubmod.tarot.switched": "Archangel switched to %1$s"
+  "message.cherubmod.tarot.switched": "Archangel switched to %1$s",
+
+  "death.attack.cherub_strength_spall": "%1$s was shredded by their own armor against %2$s",
+  "death.attack.cherub_strength_punch": "%1$s was crushed by %2$s's bare hands"
+
 }
