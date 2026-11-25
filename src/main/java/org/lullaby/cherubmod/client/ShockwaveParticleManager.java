@@ -191,3 +191,5 @@ public class ShockwaveParticleManager {
         }
     }
 }
+//immunity to slow, blind, hitting gives glowing, killing gives absorptoin
+//less health, more knockback

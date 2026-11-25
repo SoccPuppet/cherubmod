@@ -6,8 +6,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.Util;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.GameRules;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -15,7 +13,6 @@ import net.minecraftforge.event.entity.living.LivingExperienceDropEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import org.apache.logging.log4j.core.jmx.Server;
 import org.lullaby.cherubmod.Cherubmod;
 import org.lullaby.cherubmod.capability.Race;
 import org.lullaby.cherubmod.capability.RaceCapability;
@@ -113,14 +110,6 @@ public class RaceEvent {
         if (event.getPlayer() instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.getPlayer();
             CherubNetwork.syncToTrackingAndSelf(player);
-
-            // Helpful verification for testing /switched on
-            player.getCapability(RaceCapability.INSTANCE).ifPresent(data ->
-                    player.sendMessage(
-                            new StringTextComponent("Respawned as race: " + data.getRace().name()),
-                            Util.NIL_UUID
-                    )
-            );
             deliverPendingTarotDeck(player);
         }
     }

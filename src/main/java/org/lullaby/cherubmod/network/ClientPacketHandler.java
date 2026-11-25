@@ -18,19 +18,22 @@ import java.util.Random;
 
 public class ClientPacketHandler {
     public static void handleSyncRace(SyncRacePacket msg) {
-        ClientWorld world = Minecraft.getInstance().level;
-        if (world == null) {
+        Minecraft mc = Minecraft.getInstance();
+        Entity target = null;
+
+        if (mc.player != null && mc.player.getId() == msg.getEntityId()) {
+            target = mc.player;
+        } else if (mc.level != null) {
+            target = mc.level.getEntity(msg.getEntityId());
+        }
+
+        if (!(target instanceof PlayerEntity)) {
             return;
         }
-        Entity entity = world.getEntity(msg.getEntityId());
-        if (!(entity instanceof PlayerEntity)) {
-            return;
-        }
-        entity.getCapability(RaceCapability.INSTANCE).ifPresent(data -> {
+
+        target.getCapability(RaceCapability.INSTANCE).ifPresent(data -> {
             data.setRace(msg.getRace());
             data.setArchangel(msg.getArchangel());
-            data.setPendingRaceChange(msg.isPendingRaceChange());
-            data.setPossession(msg.getPossession());
             data.setHoveringItems(msg.getHoveringItems());
         });
     }

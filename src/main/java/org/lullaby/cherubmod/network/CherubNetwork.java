@@ -10,6 +10,7 @@ import net.minecraftforge.fml.network.simple.SimpleChannel;
 import org.lullaby.cherubmod.Cherubmod;
 import org.lullaby.cherubmod.capability.RaceCapability;
 
+import java.util.ArrayList;
 import java.util.Optional;
 
 public class CherubNetwork {
@@ -79,9 +80,11 @@ public class CherubNetwork {
             double dirX, double dirY, double dirZ,
             float entityScale
     ) {
+        SpallParticlePacket packet = new SpallParticlePacket(x, y, z, dirX, dirY, dirZ, entityScale);
         CHANNEL.send(
-                PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> target),
-                new SpallParticlePacket(x, y, z, dirX, dirY, dirZ, entityScale)
+                PacketDistributor.NEAR.with(PacketDistributor.TargetPoint
+                        .p(target.getX(), target.getY(), target.getZ(), 36.0D, target.level.dimension())),
+                packet
         );
     }
 
@@ -90,26 +93,36 @@ public class CherubNetwork {
             double x, double y, double z,
             float radius
     ) {
+        ShockwaveParticlePacket packet = new ShockwaveParticlePacket(x, y, z, radius);
         CHANNEL.send(
-                PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> epicenterEntity),
-                new ShockwaveParticlePacket(x, y, z, radius)
+                PacketDistributor.NEAR.with(PacketDistributor.TargetPoint
+                        .p(epicenterEntity.getX(), epicenterEntity.getY(), epicenterEntity.getZ(),
+                                36.0D, epicenterEntity.level.dimension())),
+                packet
         );
     }
 
     public static void sendPossessionParticles(ServerPlayerEntity player, boolean summon) {
+        PossessionParticlePacket packet = new PossessionParticlePacket(player.getId(), summon);
         CHANNEL.send(
-                PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> player),
-                new PossessionParticlePacket(player.getId(), summon)
+                PacketDistributor.NEAR.with(PacketDistributor.TargetPoint
+                        .p(player.getX(), player.getY(), player.getZ(), 36.0D, player.level.dimension())),
+                packet
         );
     }
 
     public static void syncToTrackingAndSelf(ServerPlayerEntity player) {
-        player.getCapability(RaceCapability.INSTANCE).ifPresent(data ->
-                CHANNEL.send(
-                        PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> player),
-                        new SyncRacePacket(player.getId(), data)
-                )
-        );
+        player.getCapability(RaceCapability.INSTANCE).ifPresent(data -> {
+            SyncRacePacket selfPacket = new SyncRacePacket(player.getId(), data);
+            SyncRacePacket trackingPacket = new SyncRacePacket(
+                    player.getId(),
+                    data.getRace(),
+                    data.getArchangel(),
+                    new ArrayList<>(data.getHoveringItems())
+            );
+            CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), selfPacket);
+            CHANNEL.send(PacketDistributor.TRACKING_ENTITY.with(() -> player), trackingPacket);
+        });
     }
 
     public static void syncTargetToViewer(ServerPlayerEntity target, ServerPlayerEntity viewer) {

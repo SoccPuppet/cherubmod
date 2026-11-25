@@ -44,6 +44,9 @@
   "archangel.cherubmod.Strength.2": "[+] Your punches shatter armor, dealing additional, armor-piercing damage the more armor your target has.",
   "archangel.cherubmod.Strength.3": "[+] Sneak while punching to instead slam the ground, dealing reduced damage in a large radius.",
   "archangel.cherubmod.Strength.4": "[-] You deal nearly no damage while holding anything.",
+  "archangel.cherubmod.TheMoon.1": "[+] Your piercing sight makes you immune to Blindness and let you see through any fog.",
+  "archangel.cherubmod.TheMoon.2": "[-] Your Archangel disallows you from dealing damage, though knockback still applies.",
+  "archangel.cherubmod.TheMoon.3": "[-] The unpleasantly bright sun afflicts you with Weakness I while under the daytime sky.",
 
 
   "message.cherubmod.tarot.switched": "Archangel switched to %1$s",

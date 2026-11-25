@@ -2,6 +2,7 @@ package org.lullaby.cherubmod.mixin;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.DamageSource;
+import org.lullaby.cherubmod.event.MoonAbilityEvents;
 import org.lullaby.cherubmod.event.StrengthAbilityEvents;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -16,11 +17,12 @@ public abstract class LivingEntityMixin {
             argsOnly = true,
             ordinal = 0
     )
-    private float cherubmod_adjustStrengthDamageAmount(float amount, DamageSource source, float originalAmount) {
+    private float cherubmod_adjustCherubDamageAmount(float amount, DamageSource source, float originalAmount) {
         LivingEntity target = (LivingEntity) (Object) this;
         if (target.level.isClientSide) {
             return amount;
         }
-        return StrengthAbilityEvents.adjustIncomingDamage(target, source, amount);
+        float adjusted = StrengthAbilityEvents.adjustIncomingDamage(target, source, amount);
+        return MoonAbilityEvents.adjustIncomingDamage(target, source, adjusted);
     }
 }

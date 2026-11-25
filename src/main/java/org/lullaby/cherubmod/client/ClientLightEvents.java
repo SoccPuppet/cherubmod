@@ -70,10 +70,10 @@ public class ClientLightEvents {
 
             if (previous == null) {
                 LAST_POSITIONS.put(id, current);
-                collectDirtySections(current, current, r);
+                collectDirtySections(world, current, r);
             } else if (!previous.equals(current)) {
                 LAST_POSITIONS.put(id, current);
-                collectDirtySections(previous, current, r);
+                collectDirtySections(world, current, r);
             }
         }
 
@@ -82,7 +82,7 @@ public class ClientLightEvents {
             Map.Entry<Integer, BlockPos> entry = it.next();
             if (!activeIds.contains(entry.getKey())) {
                 BlockPos oldPos = entry.getValue();
-                collectDirtySections(oldPos, oldPos, r);
+                collectDirtySections(world, oldPos, r);
                 it.remove();
             }
         }
@@ -97,18 +97,39 @@ public class ClientLightEvents {
         CherubLightManager.clearClient();
     }
 
-    private static void collectDirtySections(BlockPos a, BlockPos b, int radius) {
-        int minSecX = (Math.min(a.getX(), b.getX()) - radius - 1) >> 4;
-        int minSecY = Math.max(0, (Math.min(a.getY(), b.getY()) - radius - 1) >> 4);
-        int minSecZ = (Math.min(a.getZ(), b.getZ()) - radius - 1) >> 4;
-        int maxSecX = (Math.max(a.getX(), b.getX()) + radius + 1) >> 4;
-        int maxSecY = Math.min(15, (Math.max(a.getY(), b.getY()) + radius + 1) >> 4);
-        int maxSecZ = (Math.max(a.getZ(), b.getZ()) + radius + 1) >> 4;
+    private static void collectDirtySections(ClientWorld world, BlockPos center, int radius) {
+        int cx = center.getX();
+        int cy = center.getY();
+        int cz = center.getZ();
+
+        int minSecX = (cx - radius - 1) >> 4;
+        int minSecY = Math.max(0, (cy - radius - 1) >> 4);
+        int minSecZ = (cz - radius - 1) >> 4;
+        int maxSecX = (cx + radius + 1) >> 4;
+        int maxSecY = Math.min(15, (cy + radius + 1) >> 4);
+        int maxSecZ = (cz + radius + 1) >> 4;
 
         for (int sx = minSecX; sx <= maxSecX; sx++) {
-            for (int sy = minSecY; sy <= maxSecY; sy++) {
-                for (int sz = minSecZ; sz <= maxSecZ; sz++) {
-                    DIRTY_SECTIONS.add(SectionPos.asLong(sx, sy, sz));
+            int minX = (sx << 4) - 1;
+            int maxX = (sx << 4) + 16;
+            int dx = cx < minX ? (minX - cx) : (cx > maxX ? (cx - maxX) : 0);
+            if (dx > radius) continue;
+
+            for (int sz = minSecZ; sz <= maxSecZ; sz++) {
+                if (!world.hasChunk(sx, sz)) continue;
+                int minZ = (sz << 4) - 1;
+                int maxZ = (sz << 4) + 16;
+                int dz = cz < minZ ? (minZ - cz) : (cz > maxZ ? (cz - maxZ) : 0);
+                int distXZ = dx + dz;
+                if (distXZ > radius) continue;
+
+                for (int sy = minSecY; sy <= maxSecY; sy++) {
+                    int minY = (sy << 4) - 1;
+                    int maxY = (sy << 4) + 16;
+                    int dy = cy < minY ? (minY - cy) : (cy > maxY ? (cy - maxY) : 0);
+                    if (distXZ + dy <= radius) {
+                        DIRTY_SECTIONS.add(SectionPos.asLong(sx, sy, sz));
+                    }
                 }
             }
         }
