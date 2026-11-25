@@ -1,11 +1,14 @@
 package org.lullaby.cherubmod.mixin;
 
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.DamageSource;
 import org.lullaby.cherubmod.capability.Race;
 import org.lullaby.cherubmod.capability.RaceCapability;
 import org.lullaby.cherubmod.damage.StrengthPunchDamageSource;
+import org.lullaby.cherubmod.event.MoonAbilityEvents;
 import org.lullaby.cherubmod.event.StrengthAbilityEvents;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -30,6 +33,20 @@ public abstract class PlayerEntityMixin {
             return StrengthPunchDamageSource.createPrimary(attacker, critMultiplier, crouching);
         }
         return DamageSource.playerAttack(attacker);
+    }
+
+    @Redirect(
+            method = "attack(Lnet/minecraft/entity/Entity;)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/enchantment/EnchantmentHelper;getFireAspect(Lnet/minecraft/entity/LivingEntity;)I"
+            )
+    )
+    private int cherubmod_suppressMoonFireAspect(LivingEntity attacker) {
+        if (attacker instanceof PlayerEntity && MoonAbilityEvents.isMoonCherub((PlayerEntity) attacker)) {
+            return 0;
+        }
+        return EnchantmentHelper.getFireAspect(attacker);
     }
 
     @Inject(method = "attack(Lnet/minecraft/entity/Entity;)V", at = @At("RETURN"))

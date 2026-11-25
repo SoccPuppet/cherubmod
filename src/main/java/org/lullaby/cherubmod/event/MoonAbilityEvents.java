@@ -1,7 +1,12 @@
 package org.lullaby.cherubmod.event;
 
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.enchantment.Enchantments;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.projectile.AbstractArrowEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.util.DamageSource;
@@ -9,6 +14,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.living.PotionEvent;
@@ -167,6 +173,38 @@ public class MoonAbilityEvents {
         if (current != null && current.getAmplifier() == 0 && current.getDuration() <= SUN_WEAKNESS_DURATION) {
             player.removeEffect(Effects.WEAKNESS);
         }
+    }
+
+    @SubscribeEvent
+    public static void onEntityJoinWorld(EntityJoinWorldEvent event) {
+        if (event.getWorld().isClientSide) {
+            return;
+        }
+        if (!(event.getEntity() instanceof AbstractArrowEntity)) {
+            return;
+        }
+        AbstractArrowEntity arrow = (AbstractArrowEntity) event.getEntity();
+        if (arrow.getRemainingFireTicks() <= 0) {
+            return;
+        }
+        Entity owner = arrow.getOwner();
+        if (!(owner instanceof PlayerEntity)) {
+            return;
+        }
+        PlayerEntity shooter = (PlayerEntity) owner;
+        if (isMoonCherub(shooter) && hasFlameWeapon(shooter)) {
+            arrow.clearFire();
+        }
+    }
+
+    private static boolean hasFlameWeapon(PlayerEntity player) {
+        return hasFlame(player.getUseItem())
+                || hasFlame(player.getMainHandItem())
+                || hasFlame(player.getOffhandItem());
+    }
+    private static boolean hasFlame(ItemStack stack) {
+        return !stack.isEmpty()
+                && EnchantmentHelper.getItemEnchantmentLevel(Enchantments.FLAMING_ARROWS, stack) > 0;
     }
 
     @Nullable
