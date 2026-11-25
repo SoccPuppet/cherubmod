@@ -36,7 +36,7 @@ public class TarotDeckItem extends Item {
         super.appendHoverText(stack, world, tooltip, flag);
         String translated = new TranslationTextComponent("tooltip.cherubmod.tarot_deck").getString();
         for (String line : translated.split("\\r?\\n")) {
-            tooltip.add(new StringTextComponent(line));
+            tooltip.add(new StringTextComponent(line).withStyle(TextFormatting.GRAY));
         }
     }
 

@@ -13,6 +13,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.Hand;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
@@ -48,7 +49,7 @@ public class VapeItem extends Item {
         super.appendHoverText(stack, world, tooltip, flag);
         String translated = new TranslationTextComponent("tooltip.cherubmod.vape").getString();
         for (String line : translated.split("\\r?\\n")) {
-            tooltip.add(new StringTextComponent(line));
+            tooltip.add(new StringTextComponent(line).withStyle(TextFormatting.GRAY));
         }
     }
 
