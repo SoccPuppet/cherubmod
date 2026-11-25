@@ -14,6 +14,7 @@ import net.minecraft.item.*;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Hand;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
@@ -171,7 +172,7 @@ public class PossessionHelper {
 
         if (!isValidForDesignation(mainHand)) {
             player.displayClientMessage(
-                    new StringTextComponent("You must designate your possession, an unstackable item."),
+                    new TranslationTextComponent("cherubmod.invalidpossession"),
                     true
             );
             return false;

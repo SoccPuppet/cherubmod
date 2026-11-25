@@ -1,6 +1,7 @@
 package org.lullaby.cherubmod.item;
 
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -10,16 +11,23 @@ import net.minecraft.item.UseAction;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Hand;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import org.lullaby.cherubmod.capability.Race;
 import org.lullaby.cherubmod.capability.RaceCapability;
 import org.lullaby.cherubmod.network.CherubNetwork;
 import org.lullaby.cherubmod.possession.PossessionHelper;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.List;
 
 public class VapeItem extends Item {
-    public static final int CHANNEL_TICKS = 50; // 2.5 seconds
+    public static final int CHANNEL_TICKS = 40;
 
     public static final DamageSource VAPE_ASCENSION_DAMAGE = new DamageSource("cherub_vape") {
         {
@@ -31,6 +39,17 @@ public class VapeItem extends Item {
 
     public VapeItem(Properties properties) {
         super(properties);
+    }
+
+    @Override
+    @OnlyIn(Dist.CLIENT)
+    public void appendHoverText(@Nonnull ItemStack stack, @Nullable World world,
+                                @Nonnull List<ITextComponent> tooltip, @Nonnull ITooltipFlag flag) {
+        super.appendHoverText(stack, world, tooltip, flag);
+        String translated = new TranslationTextComponent("tooltip.cherubmod.vape").getString();
+        for (String line : translated.split("\\r?\\n")) {
+            tooltip.add(new StringTextComponent(line));
+        }
     }
 
     @Override
