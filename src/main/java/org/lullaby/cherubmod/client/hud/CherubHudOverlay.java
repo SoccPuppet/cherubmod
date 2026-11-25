@@ -58,7 +58,7 @@ public final class CherubHudOverlay {
         }
 
         IRaceData data = player.getCapability(RaceCapability.INSTANCE).orElse(null);
-        if (data.getRace() != Race.CHERUB) {
+        if (data == null || data.getRace() != Race.CHERUB) {
             return;
         }
 

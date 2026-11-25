@@ -19,6 +19,7 @@ public class StrengthPunchDamageSource extends EntityDamageSource {
     private final Vector3d shockwaveOrigin;
 
     private float rawPunch;
+    private float fullRawPunch;
     private float targetArmor;
     private float spallDamage;
     private float preHitAbsorption;
@@ -99,6 +100,14 @@ public class StrengthPunchDamageSource extends EntityDamageSource {
         this.spallDamage = spallDamage;
         this.preHitAbsorption = preHitAbsorption;
         this.impactRecorded = true;
+    }
+
+    public void setFullRawPunch(float fullRawPunch) {
+        this.fullRawPunch = fullRawPunch;
+    }
+
+    public float getFullRawPunch() {
+        return fullRawPunch;
     }
 
     public boolean isImpactRecorded() {

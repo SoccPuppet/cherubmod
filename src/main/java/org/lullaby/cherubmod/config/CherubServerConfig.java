@@ -92,7 +92,8 @@ public class CherubServerConfig {
                                 "minecraft:totem_of_undying",
                                 "minecraft:enchanted_book",
                                 "minecraft:written_book",
-                                "minecraft:writable_book"
+                                "minecraft:writable_book",
+                                "mekanism:robit"
                         ),
                         CherubServerConfig::isNonEmptyString
                 );

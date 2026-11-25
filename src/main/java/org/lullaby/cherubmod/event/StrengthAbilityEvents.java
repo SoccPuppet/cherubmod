@@ -87,15 +87,21 @@ public class StrengthAbilityEvents {
         PENDING_CRIT_MULTIPLIERS.put(player.getUUID(), modifier);
     }
 
-    @SubscribeEvent
-    public static void onLivingAttack(LivingAttackEvent event) {
-        if (event.getEntityLiving().level.isClientSide) {
-            return;
+    public static float adjustIncomingDamage(LivingEntity target, DamageSource source, float amount) {
+        if (source instanceof StrengthPunchDamageSource) {
+            StrengthPunchDamageSource strengthSource = (StrengthPunchDamageSource) source;
+            float fullRawPunch = (5.0F + 0.05F * Math.max(0.0F, target.getHealth())) * strengthSource.getDamageScale();
+            strengthSource.setFullRawPunch(fullRawPunch);
+            return fullRawPunch;
         }
-        if (event.getSource() instanceof StrengthPunchDamageSource
-                && event.getEntityLiving().invulnerableTime > 10) {
-            event.setCanceled(true);
+
+        // Clamp non-punch Strength Cherub attacks BEFORE vanilla stores target.lastHurt
+        PlayerEntity attacker = resolveAttacker(source);
+        if (attacker != null && attacker != target && isStrengthCherub(attacker)) {
+            return Math.min(amount, 1.0F);
         }
+
+        return amount;
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -109,25 +115,34 @@ public class StrengthAbilityEvents {
 
         if (source instanceof StrengthPunchDamageSource) {
             StrengthPunchDamageSource strengthSource = (StrengthPunchDamageSource) source;
-            float damageScale = strengthSource.getDamageScale();
 
-            float rawPunch = (7.0F + 0.06F * target.getHealth()) * damageScale;
+            // Vanilla already subtracted target.lastHurt if this hit landed during i-frames
+            // (and zeroed amount if blocked by a shield)
+            float deltaRawPunch = event.getAmount();
+            if (deltaRawPunch <= 0.0F) {
+                return;
+            }
+
+            float fullRawPunch = strengthSource.getFullRawPunch();
+            float iframeRatio = fullRawPunch > 0.0F
+                    ? MathHelper.clamp(deltaRawPunch / fullRawPunch, 0.0F, 1.0F)
+                    : 1.0F;
+
             float armor = (float) target.getArmorValue();
             float toughness = (float) target.getAttributeValue(Attributes.ARMOR_TOUGHNESS);
 
             float spall = 0.0F;
             if (armor > 0.0F) {
-                float afterArmor = CombatRules.getDamageAfterAbsorb(rawPunch, armor, toughness);
-                float blocked = Math.max(0.0F, rawPunch - afterArmor);
-                spall = 1.25F * blocked + 0.25F * armor * damageScale;
+                float afterArmor = CombatRules.getDamageAfterAbsorb(deltaRawPunch, armor, toughness);
+                float blocked = Math.max(0.0F, deltaRawPunch - afterArmor);
+                spall = 1.25F * blocked + 0.25F * armor * strengthSource.getDamageScale() * iframeRatio;
             }
 
-            strengthSource.recordImpact(rawPunch, armor, spall, target.getAbsorptionAmount());
-            event.setAmount(rawPunch);
+            strengthSource.recordImpact(deltaRawPunch, armor, spall, target.getAbsorptionAmount());
             return;
         }
 
-        // All non-punch damage dealt by a Strength Cherub is capped at 1.0 (excluding self-damage)
+        // Safety clamp in case another mod boosts non-punch damage inside LivingHurtEvent
         PlayerEntity attacker = resolveAttacker(source);
         if (attacker != null && attacker != target && isStrengthCherub(attacker)) {
             if (event.getAmount() > 1.0F) {
