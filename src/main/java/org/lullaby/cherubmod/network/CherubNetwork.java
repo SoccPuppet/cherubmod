@@ -121,7 +121,6 @@ public class CherubNetwork {
 
     public static void syncToTrackingAndSelf(ServerPlayerEntity player) {
         player.getCapability(RaceCapability.INSTANCE).ifPresent(data -> {
-            SyncRacePacket selfPacket = new SyncRacePacket(player.getId(), data);
             SyncRacePacket trackingPacket = new SyncRacePacket(
                     player.getId(),
                     data.getRace(),
@@ -130,7 +129,7 @@ public class CherubNetwork {
                     data.getHangedOneActiveTicks(),
                     new ArrayList<>(data.getHoveringItems())
             );
-            CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), selfPacket);
+            CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), trackingPacket);
             CHANNEL.send(PacketDistributor.TRACKING_ENTITY.with(() -> player), trackingPacket);
         });
     }
