@@ -18,30 +18,34 @@ public class SyncRacePacket {
     private final Race race;
     private final Archangel archangel;
     private final List<ItemStack> hoveringItems;
+    private final boolean judgementTotemCharged;
 
     public SyncRacePacket(int entityId, IRaceData data) {
-        this(entityId, data.getRace(), data.getArchangel(),
+        this(entityId, data.getRace(), data.getArchangel(), true,
                 new ArrayList<>(data.getHoveringItems()));
     }
 
-    public SyncRacePacket(int entityId, Race race, Archangel archangel,
+    public SyncRacePacket(int entityId, Race race, Archangel archangel, boolean judgementTotemCharged,
                           List<ItemStack> hoveringItems) {
         this.entityId = entityId;
         this.race = race;
         this.archangel = archangel;
         this.hoveringItems = hoveringItems;
+        this.judgementTotemCharged = judgementTotemCharged;
     }
 
     public int getEntityId() { return entityId; }
     public Race getRace() { return race; }
     public Archangel getArchangel() { return archangel; }
     public List<ItemStack> getHoveringItems() { return hoveringItems; }
+    public boolean getJudgementTotemCharged() { return judgementTotemCharged; }
 
     public static void encode(SyncRacePacket msg, PacketBuffer buf) {
         buf.writeVarInt(msg.entityId);
         buf.writeEnum(msg.race);
         buf.writeEnum(msg.archangel);
         buf.writeVarInt(msg.hoveringItems.size());
+        buf.writeBoolean(msg.judgementTotemCharged);
         for (ItemStack stack : msg.hoveringItems) {
             buf.writeItem(stack);
         }
@@ -52,11 +56,12 @@ public class SyncRacePacket {
         Race race = buf.readEnum(Race.class);
         Archangel archangel = buf.readEnum(Archangel.class);
         int count = buf.readVarInt();
+        boolean judgementTotemCharged = buf.readBoolean();
         List<ItemStack> hovering = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
             hovering.add(buf.readItem());
         }
-        return new SyncRacePacket(entityId, race, archangel, hovering);
+        return new SyncRacePacket(entityId, race, archangel, judgementTotemCharged, hovering);
     }
 
     public static void handle(SyncRacePacket msg, Supplier<NetworkEvent.Context> ctxSupplier) {

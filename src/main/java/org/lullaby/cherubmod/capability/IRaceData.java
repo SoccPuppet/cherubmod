@@ -14,6 +14,9 @@ public interface IRaceData {
     boolean isPendingRaceChange();
     void setPendingRaceChange(boolean pendingRaceChange);
 
+    boolean isJudgementTotemCharged();
+    void setJudgementTotemCharged(boolean charged);
+
     ItemStack getPossession();
     void setPossession(ItemStack stack);
 

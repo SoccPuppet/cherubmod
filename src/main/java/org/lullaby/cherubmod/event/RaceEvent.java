@@ -57,6 +57,7 @@ public class RaceEvent {
                     newData.copyFrom(oldData);
 
                     if (event.isWasDeath()) {
+                        newData.setJudgementTotemCharged(true);
                         if(newData.isPendingRaceChange()) {
                             newData.setRace(Race.CHERUB);
                             newData.setPendingRaceChange(false);

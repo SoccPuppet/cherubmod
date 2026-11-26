@@ -36,6 +36,7 @@ public class RaceCapability {
         private static final String KEY_POSSESSION = "Possession";
         private static final String KEY_HOVERINGITEMS = "HoveringItems";
         private static final String KEY_POSSESSION_GEN = "PossessionGen";
+        private static final String KEY_JUDGEMENT_TOTEM_CHARGED = "JudgementTotemCharged";
 
         @Nullable
         @Override
@@ -45,6 +46,7 @@ public class RaceCapability {
             tag.putString(KEY_ARCHANGEL, instance.getArchangel().toString());
             tag.putBoolean(KEY_PENDING_RACECHANGE, instance.isPendingRaceChange());
             tag.putLong(KEY_POSSESSION_GEN, instance.getPossessionGeneration());
+            tag.putBoolean(KEY_JUDGEMENT_TOTEM_CHARGED, instance.isJudgementTotemCharged());
             if(!instance.getPossession().isEmpty()){
                 tag.put(KEY_POSSESSION, instance.getPossession().save(new CompoundNBT()));
             }
@@ -77,6 +79,11 @@ public class RaceCapability {
             }
             instance.setPendingRaceChange(tag.getBoolean(KEY_PENDING_RACECHANGE));
             instance.setPossessionGeneration(tag.getLong(KEY_POSSESSION_GEN));
+            if (tag.contains(KEY_JUDGEMENT_TOTEM_CHARGED)) {
+                instance.setJudgementTotemCharged(tag.getBoolean(KEY_JUDGEMENT_TOTEM_CHARGED));
+            } else {
+                instance.setJudgementTotemCharged(true);
+            }
 
             if(tag.contains(KEY_POSSESSION, Constants.NBT.TAG_COMPOUND)){
                 instance.setPossession(ItemStack.of(tag.getCompound(KEY_POSSESSION)));

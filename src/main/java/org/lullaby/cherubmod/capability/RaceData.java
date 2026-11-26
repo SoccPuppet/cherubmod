@@ -54,6 +54,18 @@ public class RaceData implements IRaceData{
         }
     }
 
+    private boolean judgementTotemCharged = true;
+
+    @Override
+    public boolean isJudgementTotemCharged() {
+        return judgementTotemCharged;
+    }
+
+    @Override
+    public void setJudgementTotemCharged(boolean charged) {
+        this.judgementTotemCharged = charged;
+    }
+
     @Override
     public boolean isPendingRaceChange() {
         return pendingRaceChange;
@@ -71,6 +83,7 @@ public class RaceData implements IRaceData{
         this.possession = raceData.getPossession();
         this.setHoveringItems(raceData.getHoveringItems());
         this.possessionGeneration = raceData.getPossessionGeneration();
+        this.judgementTotemCharged = raceData.isJudgementTotemCharged();
     }
 
     @Override

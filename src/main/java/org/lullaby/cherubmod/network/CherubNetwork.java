@@ -118,6 +118,7 @@ public class CherubNetwork {
                     player.getId(),
                     data.getRace(),
                     data.getArchangel(),
+                    data.isJudgementTotemCharged(),
                     new ArrayList<>(data.getHoveringItems())
             );
             CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), selfPacket);

@@ -22,5 +22,11 @@ public final class CherubHudProviders {
                 state.style(TextFormatting.GOLD, TextFormatting.BOLD);
             }
         });
+        // Judgement: Golden when totem is charged
+        CherubHudRegistry.register(Archangel.JUDGEMENT, (player, data, state) -> {
+            if (data.isJudgementTotemCharged()) {
+                state.style(TextFormatting.GOLD);
+            }
+        });
     }
 }

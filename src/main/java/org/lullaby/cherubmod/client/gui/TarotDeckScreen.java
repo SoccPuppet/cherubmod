@@ -10,9 +10,11 @@ import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldVertexBufferUploader;
+import net.minecraft.client.renderer.texture.SimpleTexture;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.IReorderingProcessor;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Matrix4f;
@@ -30,19 +32,24 @@ import org.lullaby.cherubmod.capability.RaceCapability;
 import org.lullaby.cherubmod.network.CherubNetwork;
 import org.lullaby.cherubmod.network.SelectArchangelPacket;
 import org.lullaby.cherubmod.tarot.TarotArcana;
+import org.lwjgl.opengl.GL12;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @OnlyIn(Dist.CLIENT)
 public class TarotDeckScreen extends Screen {
     private static final int GRID_COLS = 5;
     private static final int GRID_ROWS = 5;
-    private static final float CARD_ASPECT = 0.68F; // width / height portrait ratio
+    private static final float CARD_ASPECT = 7F / 12F; // width / height portrait ratio
     private static final int SCROLLBAR_WIDTH = 5;
     private static final float TITLE_SCALE = 2F;
+    private static final boolean CROP_TO_FILL_SLOT = false;
+
+    private final float[] cardAspectCache = new float[TarotArcana.values().length];
 
     private static final int COLOR_FRAME = 0xFFFFFFFF;
     private static final int COLOR_INNER_BG = 0xFFECECEC;
@@ -85,6 +92,8 @@ public class TarotDeckScreen extends Screen {
     @Override
     protected void init() {
         super.init();
+
+        Arrays.fill(this.cardAspectCache, -1.0F);
 
         // Pre-select the player's current Archangel on first open
         if (!initializedSelection) {
@@ -363,11 +372,17 @@ public class TarotDeckScreen extends Screen {
             // Card art texture (maps entire PNG regardless of resolution)
             // If this assert fires I will be very upset
             assert this.minecraft != null;
-            this.minecraft.getTextureManager().bind(cards[i].getTexture());
+            // Dark neutral backing blends cleanly if a card has a slightly different aspect ratio
+            fill(matrixStack, cx, cy, cx + cardW, cy + cardH, 0xFF141414);
+
+            ResourceLocation texture = cards[i].getTexture();
+            this.minecraft.getTextureManager().bind(texture);
             RenderSystem.enableTexture();
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
-            blitFullTexture(matrixStack, cx, cy, cardW, cardH);
+
+            float texAspect = getOrInitCardAspect(i, texture);
+            blitAspectPreserving(matrixStack, cx, cy, cardW, cardH, texAspect);
             RenderSystem.disableBlend();
 
             // Extra inner highlight ring when selected
@@ -377,6 +392,80 @@ public class TarotDeckScreen extends Screen {
         }
 
         return hovered;
+    }
+
+    private float getOrInitCardAspect(int index, ResourceLocation texture) {
+        float cached = this.cardAspectCache[index];
+        if (cached > 0.0F) {
+            return cached;
+        }
+
+        float aspect = CARD_ASPECT;
+        // Only inspect/filter real loaded PNGs, never mutate Minecraft's shared MissingTextureSprite
+        assert this.minecraft != null;
+        if (this.minecraft.getTextureManager().getTexture(texture) instanceof SimpleTexture) {
+            int texW = GL11.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D, 0, GL11.GL_TEXTURE_WIDTH);
+            int texH = GL11.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D, 0, GL11.GL_TEXTURE_HEIGHT);
+            if (texW > 0 && texH > 0) {
+                aspect = (float) texW / (float) texH;
+            }
+            // Smooth downscaling & clean edges without needing 21 .png.mcmeta files
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
+        }
+
+        this.cardAspectCache[index] = aspect;
+        return aspect;
+    }
+
+    private static void blitAspectPreserving(
+            MatrixStack matrixStack,
+            int x,
+            int y,
+            int width,
+            int height,
+            float texAspect
+    ) {
+        float slotAspect = (float) width / (float) height;
+        float drawX = x;
+        float drawY = y;
+        float drawW = width;
+        float drawH = height;
+        float u0 = 0.0F, v0 = 0.0F, u1 = 1.0F, v1 = 1.0F;
+
+        if (TarotDeckScreen.CROP_TO_FILL_SLOT) {
+            // Cover: fill entire slot and center-crop excess
+            if (texAspect > slotAspect) {
+                float visibleU = slotAspect / texAspect;
+                u0 = (1.0F - visibleU) * 0.5F;
+                u1 = 1.0F - u0;
+            } else if (texAspect < slotAspect) {
+                float visibleV = texAspect / slotAspect;
+                v0 = (1.0F - visibleV) * 0.5F;
+                v1 = 1.0F - v0;
+            }
+        } else {
+            // Contain: fit entire card inside slot without clipping borders or titles
+            if (texAspect > slotAspect) {
+                drawH = width / texAspect;
+                drawY = y + (height - drawH) * 0.5F;
+            } else if (texAspect < slotAspect) {
+                drawW = height * texAspect;
+                drawX = x + (width - drawW) * 0.5F;
+            }
+        }
+
+        Matrix4f matrix = matrixStack.last().pose();
+        BufferBuilder buffer = Tessellator.getInstance().getBuilder();
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
+        buffer.vertex(matrix, drawX, drawY + drawH, 0.0F).color(255, 255, 255, 255).uv(u0, v1).endVertex();
+        buffer.vertex(matrix, drawX + drawW, drawY + drawH, 0.0F).color(255, 255, 255, 255).uv(u1, v1).endVertex();
+        buffer.vertex(matrix, drawX + drawW, drawY, 0.0F).color(255, 255, 255, 255).uv(u1, v0).endVertex();
+        buffer.vertex(matrix, drawX, drawY, 0.0F).color(255, 255, 255, 255).uv(u0, v0).endVertex();
+        buffer.end();
+        WorldVertexBufferUploader.end(buffer);
     }
 
     private void renderDescriptionBox(MatrixStack matrixStack) {
