@@ -5,12 +5,16 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "cherubmod.refmap.json",
   "mixins": [
+    "AbstractArrowEntityMixin",
     "EffectMixin",
     "EntityMixin",
+    "ItemStackMixin",
     "LightEngineMixin",
     "LivingEntityMixin",
     "PlayerEntityMixin",
-    "ServerPlayerEntityMixin"
+    "ProtectionEnchantmentMixin",
+    "ServerPlayerEntityMixin",
+    "TrackedEntityMixin"
   ],
   "client": [
     "WorldRendererMixin"

@@ -29,6 +29,8 @@ public class PossessionHelper {
     public static final String TAG_POSSESSION = "cherubmod_possession";
     public static final String TAG_OWNER = "cherubmod_possession_owner";
     public static final String TAG_GEN = "cherubmod_possession_gen";
+    private static final String TAG_UNBREAKABLE = "Unbreakable";
+    public static final String TAG_GRANTED_UNBREAKABLE = "cherubmod_granted_unbreakable";
 
     public static boolean isPossessionStack(ItemStack stack) {
         if (stack.isEmpty() || !stack.hasTag()) return false;
@@ -53,6 +55,10 @@ public class PossessionHelper {
         tag.putBoolean(TAG_POSSESSION, true);
         tag.putUUID(TAG_OWNER, owner.getUUID());
         tag.putLong(TAG_GEN, generation);
+        if (copy.getMaxDamage() > 0 && !tag.getBoolean(TAG_UNBREAKABLE)) {
+            tag.putBoolean(TAG_UNBREAKABLE, true);
+            tag.putBoolean(TAG_GRANTED_UNBREAKABLE, true);
+        }
         return copy;
     }
 
@@ -63,6 +69,11 @@ public class PossessionHelper {
         copy.removeTagKey(TAG_GEN);
         if (copy.hasTag()) {
             assert copy.getTag() != null;
+            CompoundNBT tag = copy.getTag();
+            if (tag.getBoolean(TAG_GRANTED_UNBREAKABLE)) {
+                tag.remove(TAG_UNBREAKABLE);
+                tag.remove(TAG_GRANTED_UNBREAKABLE);
+            }
             if (copy.getTag().isEmpty()) {
                 copy.setTag(null);
             }

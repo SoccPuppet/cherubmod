@@ -1,5 +1,6 @@
 package org.lullaby.cherubmod.network;
 
+import com.sun.xml.internal.ws.api.message.Packet;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.ResourceLocation;
@@ -14,7 +15,7 @@ import java.util.ArrayList;
 import java.util.Optional;
 
 public class CherubNetwork {
-    private static final String PROTOCOL_VERSION = "11";
+    private static final String PROTOCOL_VERSION = "17";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(Cherubmod.MOD_ID, "main"),
             () -> PROTOCOL_VERSION,
@@ -79,6 +80,21 @@ public class CherubNetwork {
                 TriggerActiveAbilityPacket::decode,
                 TriggerActiveAbilityPacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_SERVER)
+        );
+        CHANNEL.registerMessage(
+                id++,
+                PlushVelocityPacket.class,
+                PlushVelocityPacket::encode,
+                PlushVelocityPacket::decode,
+                PlushVelocityPacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_CLIENT)
+        );
+    }
+
+    public static void sendPlushVelocity(ServerPlayerEntity player, double x, double y, double z) {
+        CHANNEL.send(
+                PacketDistributor.PLAYER.with(() -> player),
+                new PlushVelocityPacket(x, y, z)
         );
     }
 
