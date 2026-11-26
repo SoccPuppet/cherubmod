@@ -1,6 +1,5 @@
 package org.lullaby.cherubmod.network;
 
-import com.sun.xml.internal.ws.api.message.Packet;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.ResourceLocation;
@@ -167,7 +166,7 @@ public class CherubNetwork {
             );
             CHANNEL.send(
                     PacketDistributor.PLAYER.with(() -> viewer),
-                    new SyncRacePacket(target.getId(), data)
+                    trackingPacket
             );}
         );
     }
