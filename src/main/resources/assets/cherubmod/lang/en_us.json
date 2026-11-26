@@ -72,6 +72,6 @@
   "tooltip.cherubmod.vape": "Channel in offhand to become a cherub. Hold in your mainhand the item you care the most.\nAs a cherub, channel in offhand to change your Possession to your mainhand.",
   "tooltip.cherubmod.tarot_deck": "Use to select your Archangel.",
   "tooltip.cherubmod.possession.hint": "Press [%s] to summon/dismiss",
-  "tooltip.cherubmod.sewnneedle": "Channel in offhand to become a plush. \\nChannel in offhand as a plush to heal yoursel for 5 health."
+  "tooltip.cherubmod.sewnneedle": "Channel in offhand to become a plush. \nChannel in offhand as a plush to heal yoursel for 5 health."
 
 }
