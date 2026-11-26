@@ -140,7 +140,7 @@ public final class CherubHudOverlay {
         // Outer edge of the 22x22 slot frame sits at innerX - 3 (left) and innerX + 19 (right)
         int drawX = (slotSide == HandSide.RIGHT)
                 ? (innerX + 20)
-                : (innerX - 7 - textWidth);
+                : (innerX - 8 - textWidth);
         int drawY = innerY + (16 - (font.lineHeight - 1)) / 2;
 
         font.drawShadow(matrixStack, display, drawX, drawY, 0xFFE0E0E0);
