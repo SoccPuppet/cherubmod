@@ -46,7 +46,7 @@ public final class PehkuiCompat {
 
         private static void setIfChanged(ScaleData data, float target) {
             if (Math.abs(data.getTargetScale() - target) > 1.0E-4F) {
-                data.setScale(target);
+                data.setTargetScale(target);
             }
         }
     }

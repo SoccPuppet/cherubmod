@@ -58,8 +58,6 @@ public final class CherubHudProviders {
                 state.bar(progress, 0x7A7A7A);
             }
         });
-        CherubHudRegistry.register(Race.PLUSH, (player, data, state) -> {
-            state.icon(PLUSH_DEFAULT_ICON);
-        });
+        CherubHudRegistry.register(Race.PLUSH, (player, data, state) -> state.icon(PLUSH_DEFAULT_ICON));
     }
 }

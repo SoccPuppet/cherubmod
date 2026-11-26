@@ -21,7 +21,6 @@ import org.lullaby.cherubmod.client.ClientSetup;
 import org.lullaby.cherubmod.client.gui.TarotDeckScreen;
 import org.lullaby.cherubmod.Cherubmod;
 import org.lullaby.cherubmod.capability.IRaceData;
-import org.lullaby.cherubmod.capability.Race;
 import org.lullaby.cherubmod.capability.RaceCapability;
 
 @Mod.EventBusSubscriber(modid = Cherubmod.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
