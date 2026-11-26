@@ -36,6 +36,7 @@ public class ClientPacketHandler {
             data.setArchangel(msg.getArchangel());
             data.setHoveringItems(msg.getHoveringItems());
             data.setJudgementTotemCharged(msg.getJudgementTotemCharged());
+            data.setHangedOneActiveTicks(msg.getHangedOneActiveTicks());
         });
     }
 

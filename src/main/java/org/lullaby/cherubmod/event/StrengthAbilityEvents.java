@@ -13,7 +13,6 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.CriticalHitEvent;
@@ -35,6 +34,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static org.lullaby.cherubmod.event.JudgementAbilityEvents.getPlayerEntity;
 
 @Mod.EventBusSubscriber(modid = Cherubmod.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class StrengthAbilityEvents {
@@ -330,16 +331,7 @@ public class StrengthAbilityEvents {
 
     @Nullable
     private static PlayerEntity resolveAttacker(@Nullable DamageSource source) {
-        if (source == null) {
-            return null;
-        }
-        if (source.getEntity() instanceof PlayerEntity) {
-            return (PlayerEntity) source.getEntity();
-        }
-        if (source.getDirectEntity() instanceof PlayerEntity) {
-            return (PlayerEntity) source.getDirectEntity();
-        }
-        return null;
+        return getPlayerEntity(source);
     }
 
     private static final class ImpactGeometry {

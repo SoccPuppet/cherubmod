@@ -33,6 +33,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.lullaby.cherubmod.event.JudgementAbilityEvents.getPlayerEntity;
+
 @Mod.EventBusSubscriber(modid = Cherubmod.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class MoonAbilityEvents {
 
@@ -209,15 +211,6 @@ public class MoonAbilityEvents {
 
     @Nullable
     private static PlayerEntity resolveAttacker(@Nullable DamageSource source) {
-        if (source == null) {
-            return null;
-        }
-        if (source.getEntity() instanceof PlayerEntity) {
-            return (PlayerEntity) source.getEntity();
-        }
-        if (source.getDirectEntity() instanceof PlayerEntity) {
-            return (PlayerEntity) source.getDirectEntity();
-        }
-        return null;
+        return getPlayerEntity(source);
     }
 }

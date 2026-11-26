@@ -5,16 +5,11 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.WorldVertexBufferUploader;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.settings.AttackIndicatorStatus;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.Style;
@@ -22,7 +17,8 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import org.lwjgl.opengl.GL11;
+import org.lullaby.cherubmod.client.ClientSetup;
+import org.lullaby.cherubmod.client.gui.TarotDeckScreen;
 import org.lullaby.cherubmod.Cherubmod;
 import org.lullaby.cherubmod.capability.IRaceData;
 import org.lullaby.cherubmod.capability.Race;
@@ -93,7 +89,7 @@ public final class CherubHudOverlay {
         RenderSystem.enableTexture();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        blitRegion(matrixStack, frameX, frameY, texU, SLOT_V, SLOT_TEX_W, SLOT_TEX_H, WIDGETS_TEX_SIZE, WIDGETS_TEX_SIZE);
+        blitRegion(matrixStack, frameX, frameY, texU);
 
         // 2. Draw centered, auto-scaled Roman numeral
         renderSlotText(matrixStack, mc.font, state, innerX, innerY);
@@ -103,10 +99,42 @@ public final class CherubHudOverlay {
             renderDurabilityBar(matrixStack, innerX, innerY, state.getBarProgress(), state.getBarColor());
         }
 
+        if (state.shouldShowActiveKeybind()) {
+            renderKeybindLabel(matrixStack, mc.font, slotSide, innerX, innerY);
+        }
+
         // Restore default HUD texture/blend state for downstream overlays
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         mc.getTextureManager().bind(AbstractGui.GUI_ICONS_LOCATION);
+    }
+
+    private static void renderKeybindLabel(
+            MatrixStack matrixStack,
+            FontRenderer font,
+            HandSide slotSide,
+            int innerX,
+            int innerY
+    ) {
+        if (ClientSetup.ACTIVE_ABILITY.isUnbound()) {
+            return;
+        }
+
+        String raw = ClientSetup.ACTIVE_ABILITY.getTranslatedKeyMessage().getString().trim();
+        if (raw.isEmpty()) {
+            return;
+        }
+
+        String display = raw.length() > 2 ? raw.substring(0, 2) : raw;
+        int textWidth = font.width(display);
+
+        // Outer edge of the 22x22 slot frame sits at innerX - 3 (left) and innerX + 19 (right)
+        int drawX = (slotSide == HandSide.RIGHT)
+                ? (innerX + 22)
+                : (innerX - 6 - textWidth);
+        int drawY = innerY + (16 - (font.lineHeight - 1)) / 2;
+
+        font.drawShadow(matrixStack, display, drawX, drawY, 0xFFE0E0E0);
     }
 
     private static void renderSlotText(
@@ -179,26 +207,13 @@ public final class CherubHudOverlay {
             MatrixStack matrixStack,
             int x,
             int y,
-            int u,
-            int v,
-            int width,
-            int height,
-            int texWidth,
-            int texHeight
+            int u
     ) {
-        float u0 = u / (float) texWidth;
-        float u1 = (u + width) / (float) texWidth;
-        float v0 = v / (float) texHeight;
-        float v1 = (v + height) / (float) texHeight;
+        float u0 = u / (float) CherubHudOverlay.WIDGETS_TEX_SIZE;
+        float u1 = (u + CherubHudOverlay.SLOT_TEX_W) / (float) CherubHudOverlay.WIDGETS_TEX_SIZE;
+        float v0 = CherubHudOverlay.SLOT_V / (float) CherubHudOverlay.WIDGETS_TEX_SIZE;
+        float v1 = (CherubHudOverlay.SLOT_V + CherubHudOverlay.SLOT_TEX_H) / (float) CherubHudOverlay.WIDGETS_TEX_SIZE;
 
-        Matrix4f matrix = matrixStack.last().pose();
-        BufferBuilder buffer = Tessellator.getInstance().getBuilder();
-        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-        buffer.vertex(matrix, x, y + height, 0.0F).color(255, 255, 255, 255).uv(u0, v1).endVertex();
-        buffer.vertex(matrix, x + width, y + height, 0.0F).color(255, 255, 255, 255).uv(u1, v1).endVertex();
-        buffer.vertex(matrix, x + width, y, 0.0F).color(255, 255, 255, 255).uv(u1, v0).endVertex();
-        buffer.vertex(matrix, x, y, 0.0F).color(255, 255, 255, 255).uv(u0, v0).endVertex();
-        buffer.end();
-        WorldVertexBufferUploader.end(buffer);
+        TarotDeckScreen.blitMatrix(matrixStack, x, y, CherubHudOverlay.SLOT_TEX_W, CherubHudOverlay.SLOT_TEX_H, u0, v0, u1, v1);
     }
 }

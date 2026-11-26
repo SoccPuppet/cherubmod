@@ -2,6 +2,7 @@ package org.lullaby.cherubmod.client.hud;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.text.TextFormatting;
+import org.lullaby.cherubmod.ability.ArchangelAbilityRegistry;
 import org.lullaby.cherubmod.capability.Archangel;
 import org.lullaby.cherubmod.capability.IRaceData;
 import org.lullaby.cherubmod.tarot.TarotArcana;
@@ -55,6 +56,7 @@ public final class CherubHudRegistry {
 
         TarotArcana arcana = TarotArcana.fromArchangel(archangel);
         String numeral = arcana != null ? arcana.getRomanNumeral() : "?";
-        return CherubHudState.builder(numeral);
+        return CherubHudState.builder(numeral)
+                .showActiveKeybind(ArchangelAbilityRegistry.hasActiveAbility(archangel));
     }
 }

@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Optional;
 
 public class CherubNetwork {
-    private static final String PROTOCOL_VERSION = "8";
+    private static final String PROTOCOL_VERSION = "11";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(Cherubmod.MOD_ID, "main"),
             () -> PROTOCOL_VERSION,
@@ -72,6 +72,14 @@ public class CherubNetwork {
                 ShockwaveParticlePacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT)
         );
+        CHANNEL.registerMessage(
+                id++,
+                TriggerActiveAbilityPacket.class,
+                TriggerActiveAbilityPacket::encode,
+                TriggerActiveAbilityPacket::decode,
+                TriggerActiveAbilityPacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_SERVER)
+        );
     }
 
     public static void sendSpallParticles(
@@ -119,6 +127,7 @@ public class CherubNetwork {
                     data.getRace(),
                     data.getArchangel(),
                     data.isJudgementTotemCharged(),
+                    data.getHangedOneActiveTicks(),
                     new ArrayList<>(data.getHoveringItems())
             );
             CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), selfPacket);

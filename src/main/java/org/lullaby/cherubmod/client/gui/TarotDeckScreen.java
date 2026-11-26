@@ -18,10 +18,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Matrix4f;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.util.text.*;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.lullaby.cherubmod.capability.IRaceData;
@@ -223,12 +220,13 @@ public class TarotDeckScreen extends Screen {
                 }
             } else {
                 this.acceptButton.active = true;
+                LanguageMap lang = LanguageMap.getInstance();
                 int powerIdx = 1;
                 while (I18n.exists(this.selectedArcana.getPowerKey(powerIdx))) {
                     if (powerIdx > 1) {
                         this.wrappedBody.add(BodyLine.spacer());
                     }
-                    appendPowerParagraph(I18n.get(this.selectedArcana.getPowerKey(powerIdx)), bodyWrapW);
+                    appendPowerParagraph(lang.getOrDefault(this.selectedArcana.getPowerKey(powerIdx)), bodyWrapW);
                     powerIdx++;
                 }
 
@@ -336,17 +334,6 @@ public class TarotDeckScreen extends Screen {
         }
     }
 
-    private static void blitFullTexture(MatrixStack matrixStack, int x, int y, int width, int height) {
-        Matrix4f matrix = matrixStack.last().pose();
-        BufferBuilder buffer = Tessellator.getInstance().getBuilder();
-        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-        buffer.vertex(matrix, x, y + height, 0.0F).color(255, 255, 255, 255).uv(0.0F, 1.0F).endVertex();
-        buffer.vertex(matrix, x + width, y + height, 0.0F).color(255, 255, 255, 255).uv(1.0F, 1.0F).endVertex();
-        buffer.vertex(matrix, x + width, y, 0.0F).color(255, 255, 255, 255).uv(1.0F, 0.0F).endVertex();
-        buffer.vertex(matrix, x, y, 0.0F).color(255, 255, 255, 255).uv(0.0F, 0.0F).endVertex();
-        buffer.end();
-        WorldVertexBufferUploader.end(buffer);
-    }
     @Nullable
     private TarotArcana renderCardGrid(MatrixStack matrixStack, int mouseX, int mouseY) {
         TarotArcana[] cards = TarotArcana.values();
@@ -457,6 +444,10 @@ public class TarotDeckScreen extends Screen {
             }
         }
 
+        blitMatrix(matrixStack, drawX, drawY, drawW, drawH, u0, v0, u1, v1);
+    }
+
+    public static void blitMatrix(MatrixStack matrixStack, float drawX, float drawY, float drawW, float drawH, float u0, float v0, float u1, float v1) {
         Matrix4f matrix = matrixStack.last().pose();
         BufferBuilder buffer = Tessellator.getInstance().getBuilder();
         buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);

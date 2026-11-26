@@ -66,6 +66,18 @@ public class RaceData implements IRaceData{
         this.judgementTotemCharged = charged;
     }
 
+    private int hangedOneActiveTicks = 0;
+
+    @Override
+    public int getHangedOneActiveTicks() {
+        return hangedOneActiveTicks;
+    }
+
+    @Override
+    public void setHangedOneActiveTicks(int ticks) {
+        this.hangedOneActiveTicks = Math.max(0, ticks);
+    }
+
     @Override
     public boolean isPendingRaceChange() {
         return pendingRaceChange;
@@ -84,6 +96,7 @@ public class RaceData implements IRaceData{
         this.setHoveringItems(raceData.getHoveringItems());
         this.possessionGeneration = raceData.getPossessionGeneration();
         this.judgementTotemCharged = raceData.isJudgementTotemCharged();
+        this.hangedOneActiveTicks = raceData.getHangedOneActiveTicks();
     }
 
     @Override

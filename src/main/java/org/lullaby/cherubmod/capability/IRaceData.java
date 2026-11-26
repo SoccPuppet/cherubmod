@@ -17,6 +17,13 @@ public interface IRaceData {
     boolean isJudgementTotemCharged();
     void setJudgementTotemCharged(boolean charged);
 
+    int getHangedOneActiveTicks();
+    void setHangedOneActiveTicks(int ticks);
+
+    default boolean isHangedOneActive() {
+        return getHangedOneActiveTicks() > 0;
+    }
+
     ItemStack getPossession();
     void setPossession(ItemStack stack);
 

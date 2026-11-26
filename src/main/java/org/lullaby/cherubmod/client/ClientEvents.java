@@ -24,6 +24,7 @@ import org.lullaby.cherubmod.capability.RaceCapability;
 import org.lullaby.cherubmod.item.VapeItem;
 import org.lullaby.cherubmod.network.CherubNetwork;
 import org.lullaby.cherubmod.network.TogglePossessionPacket;
+import org.lullaby.cherubmod.network.TriggerActiveAbilityPacket;
 import org.lullaby.cherubmod.possession.PossessionHelper;
 
 import java.util.List;
@@ -50,8 +51,14 @@ public class ClientEvents {
         if (event.phase != TickEvent.Phase.END || Minecraft.getInstance().player == null) {
             return;
         }
-        while (ClientSetup.SUMMON_POSSESSION != null && ClientSetup.SUMMON_POSSESSION.consumeClick()) {
+        while (ClientSetup.SUMMON_POSSESSION.consumeClick()) {
             CherubNetwork.CHANNEL.sendToServer(new TogglePossessionPacket());
+        }
+        while (ClientSetup.ACTIVE_ABILITY.consumeClick()) {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player != null) {
+                CherubNetwork.CHANNEL.sendToServer(new TriggerActiveAbilityPacket());
+            }
         }
     }
 

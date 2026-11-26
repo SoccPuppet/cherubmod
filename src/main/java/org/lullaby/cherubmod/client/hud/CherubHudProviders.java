@@ -28,5 +28,11 @@ public final class CherubHudProviders {
                 state.style(TextFormatting.GOLD);
             }
         });
+        // The Hanged One: Golden when ability is active
+        CherubHudRegistry.register(Archangel.THE_HANGED_ONE, (player, data, state) -> {
+            if (data.isHangedOneActive()) {
+                state.style(TextFormatting.GOLD);
+            }
+        });
     }
 }

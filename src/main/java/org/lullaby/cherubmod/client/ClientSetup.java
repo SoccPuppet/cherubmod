@@ -11,15 +11,20 @@ import org.lullaby.cherubmod.Cherubmod;
 
 @Mod.EventBusSubscriber(modid = Cherubmod.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ClientSetup {
-    public static KeyBinding SUMMON_POSSESSION;
+    public static final KeyBinding SUMMON_POSSESSION = new KeyBinding(
+            "key.cherubmod.summon_possession",
+            GLFW.GLFW_KEY_X,
+            "key.categories.cherubmod"
+    );
+    public static final KeyBinding ACTIVE_ABILITY = new KeyBinding(
+            "key.cherubmod.active_ability",
+            GLFW.GLFW_KEY_C,
+            "key.categories.cherubmod"
+    );
 
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
-        SUMMON_POSSESSION = new KeyBinding(
-                "key.cherubmod.summon_possession",
-                GLFW.GLFW_KEY_X,
-                "key.categories.cherubmod"
-        );
         ClientRegistry.registerKeyBinding(SUMMON_POSSESSION);
+        ClientRegistry.registerKeyBinding(ACTIVE_ABILITY);
     }
 }

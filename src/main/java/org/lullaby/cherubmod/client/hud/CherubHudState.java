@@ -20,6 +20,7 @@ public final class CherubHudState {
     private final boolean showBar;
     private final float barProgress;
     private final int barColor;
+    private final boolean showActiveKeybind;
 
     private CherubHudState(Builder builder) {
         this.text = builder.text;
@@ -28,6 +29,11 @@ public final class CherubHudState {
         this.showBar = builder.showBar;
         this.barProgress = builder.barProgress;
         this.barColor = builder.barColor;
+        this.showActiveKeybind = builder.showActiveKeybind;
+    }
+
+    public boolean shouldShowActiveKeybind() {
+        return showActiveKeybind;
     }
 
     public ITextComponent getText() {
@@ -67,6 +73,16 @@ public final class CherubHudState {
         private boolean showBar = false;
         private float barProgress = 0.0F;
         private int barColor = VANILLA_DURABILITY_COLOR;
+        private boolean showActiveKeybind = false;
+
+        public Builder showActiveKeybind() {
+            return showActiveKeybind(true);
+        }
+
+        public Builder showActiveKeybind(boolean show) {
+            this.showActiveKeybind = show;
+            return this;
+        }
 
         private Builder(IFormattableTextComponent initialText) {
             this.text = initialText;

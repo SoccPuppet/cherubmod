@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "cherubmod.refmap.json",
   "mixins": [
+    "EffectMixin",
     "LightEngineMixin",
     "LivingEntityMixin",
     "PlayerEntityMixin",
