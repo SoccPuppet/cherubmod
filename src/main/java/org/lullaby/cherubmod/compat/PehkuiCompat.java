@@ -8,12 +8,17 @@ import virtuoel.pehkui.api.ScaleTypes;
 
 public final class PehkuiCompat {
     public static final String PEHKUI_MOD_ID = "pehkui";
-    public static final float PLUSH_SCALE = 0.5F; // 1.8 * 0.5 = 0.9 blocks tall
+    public static final float PLUSH_SCALE = 0.5F;                 // 1.8 * 0.5 = 0.9 blocks tall
+    public static final float PLUSH_STUFFED_SCALE = 1.1F / 1.8F;  // 1.1 blocks tall (use 1.1F for 1.1x vanilla height)
     private static final String TAG_PLUSH_SCALED = "cherubmod_plush_scaled";
 
     private PehkuiCompat() {}
 
     public static void updatePlushScale(PlayerEntity player, boolean isPlush) {
+        updatePlushScale(player, isPlush, false);
+    }
+
+    public static void updatePlushScale(PlayerEntity player, boolean isPlush, boolean isStuffed) {
         if (!ModList.get().isLoaded(PEHKUI_MOD_ID)) {
             return;
         }
@@ -25,7 +30,7 @@ public final class PehkuiCompat {
         }
 
         if (isPlush) {
-            Handler.applyScale(player, PLUSH_SCALE);
+            Handler.applyScale(player, isStuffed ? PLUSH_STUFFED_SCALE : PLUSH_SCALE);
             persisted.putBoolean(TAG_PLUSH_SCALED, true);
         } else if (persisted.getBoolean(TAG_PLUSH_SCALED)) {
             Handler.applyScale(player, 1.0F);
@@ -35,9 +40,6 @@ public final class PehkuiCompat {
 
     private static final class Handler {
         private static void applyScale(PlayerEntity player, float target) {
-            // Scales visual model, hitbox, and eye height proportionally without altering reach/speed.
-            // Swap these two lines for setIfChanged(ScaleTypes.BASE.getScaleData(player), target)
-            // if you also want Pehkui's BASE-scale behavior (drops/reach/etc.).
             setIfChanged(ScaleTypes.HEIGHT.getScaleData(player), target);
             setIfChanged(ScaleTypes.WIDTH.getScaleData(player), target);
         }
