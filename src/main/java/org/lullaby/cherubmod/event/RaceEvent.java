@@ -64,6 +64,9 @@ public class RaceEvent {
                         newData.setWorldStasisCooldownTicks(0);
 
                         Race targetRace = newData.getPendingRace();
+                        if (targetRace == Race.CHERUB || oldData.getRace() == Race.CHERUB){
+                            applyCherubDeathKeepInventory(original, clone);
+                        }
                         if (targetRace != Race.NONE) {
                             Race previousRace = oldData.getRace();
                             newData.setRace(targetRace);
