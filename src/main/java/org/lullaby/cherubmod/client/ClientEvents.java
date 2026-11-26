@@ -71,10 +71,16 @@ public class ClientEvents {
         List<ITextComponent> tooltip = event.getToolTip();
         ITextComponent line = new TranslationTextComponent("tooltip.cherubmod.possession")
                 .withStyle(TextFormatting.GOLD, TextFormatting.BOLD);
+        ITextComponent keyName = ClientSetup.SUMMON_POSSESSION.getTranslatedKeyMessage()
+                .copy()
+                .withStyle(TextFormatting.WHITE);
+        ITextComponent hintLine = new TranslationTextComponent("tooltip.cherubmod.possession.hint", keyName)
+                .withStyle(TextFormatting.GOLD);
 
         // Insert directly beneath the item's display name (index 0);
         int insertIndex = Math.min(1, tooltip.size());
         tooltip.add(insertIndex, line);
+        tooltip.add(insertIndex + 1, hintLine);
     }
 
     @SubscribeEvent

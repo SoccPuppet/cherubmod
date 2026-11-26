@@ -64,6 +64,7 @@
   "cherub.d": "You must designate your possession, an unstackable item.",
   "cherubmod.invalidpossession": "You must hold your new possession, a valid unstackable item.",
   "tooltip.cherubmod.vape": "Channel in offhand to become a cherub. Hold in your mainhand the item you care the most.\nAs a cherub, channel in offhand to change your Possession to your mainhand.",
-  "tooltip.cherubmod.tarot_deck": "Use to select your Archangel."
+  "tooltip.cherubmod.tarot_deck": "Use to select your Archangel.",
+  "tooltip.cherubmod.possession.hint": "Press %s to summon/dismiss"
 
 }
