@@ -8,6 +8,7 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.UseAction;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Hand;
@@ -18,6 +19,7 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.lullaby.cherubmod.capability.Race;
@@ -94,6 +96,22 @@ public class SewnNeedleItem extends Item {
                             0.8F,
                             1.25F + world.random.nextFloat() * 0.2F
                     );
+
+                    if (world instanceof ServerWorld) {
+                        double spreadX = Math.max(0.25D, player.getBbWidth() * 0.5D);
+                        double spreadY = player.getBbHeight() * 0.25D;
+                        ((ServerWorld) world).sendParticles(
+                                ParticleTypes.HEART,
+                                player.getX(),
+                                player.getY() + player.getBbHeight() * 0.5D + 0.5D,
+                                player.getZ(),
+                                7,        // Matches vanilla TameableEntity#spawnTamingParticles(true)
+                                spreadX,
+                                spreadY,
+                                spreadX,
+                                0.02D     // Matches vanilla nextGaussian() * 0.02D velocity
+                        );
+                    }
                 } else {
                     if (data.getRace() == Race.CHERUB) {
                         // Drop any soulbound possession cleanly before leaving Cherub
