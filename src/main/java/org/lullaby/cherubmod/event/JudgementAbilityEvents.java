@@ -1,23 +1,34 @@
 package org.lullaby.cherubmod.event;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
-import net.minecraft.util.DamageSource;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.util.*;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.living.PotionEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fluids.FluidActionResult;
+import net.minecraftforge.fluids.FluidAttributes;
+import net.minecraftforge.fluids.FluidUtil;
+import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fml.common.Mod;
 import org.lullaby.cherubmod.Cherubmod;
-import org.lullaby.cherubmod.capability.Archangel;
-import org.lullaby.cherubmod.capability.IRaceData;
-import org.lullaby.cherubmod.capability.Race;
-import org.lullaby.cherubmod.capability.RaceCapability;
+import org.lullaby.cherubmod.capability.*;
+import org.lullaby.cherubmod.compat.PehkuiCompat;
 import org.lullaby.cherubmod.network.CherubNetwork;
 
 import javax.annotation.Nullable;
@@ -65,6 +76,96 @@ public class JudgementAbilityEvents {
     private static void registerPair(Map<Effect, Effect> map, Effect positive, Effect negative) {
         map.put(positive, negative);
         map.put(negative, positive);
+    }
+
+    // Judgement cherubs can be milked
+    @SubscribeEvent
+    public static void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
+        PlayerEntity milker = event.getPlayer();
+        Entity target = event.getTarget();
+
+        if (!(target instanceof PlayerEntity) || target == milker) {
+            return;
+        }
+
+        PlayerEntity cherubTarget = (PlayerEntity) target;
+        if (!cherubTarget.isAlive() || cherubTarget.isSpectator() || isNotJudgementCherub(cherubTarget)) {
+            return;
+        }
+
+        ItemStack stack = event.getItemStack();
+        if (stack.isEmpty()) {
+            return;
+        }
+
+        boolean isServer = !milker.level.isClientSide;
+        IFluidHandler milkSource = cherubTarget
+                .getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY)
+                .orElse(null);
+
+        if (milkSource != null) {
+            // Passing null player suppresses generic BUCKET_FILL sound so COW_MILK plays instead.
+            // Client runs with doFill=false to verify acceptance without mutating the stack.
+            FluidActionResult fillResult = FluidUtil.tryFillContainer(
+                    stack,
+                    milkSource,
+                    FluidAttributes.BUCKET_VOLUME,
+                    null,
+                    isServer
+            );
+
+            if (fillResult.isSuccess()) {
+                if (isServer) {
+                    applyFilledContainer(milker, event.getHand(), stack, fillResult.getResult());
+                    playMilkSound(cherubTarget);
+                }
+                event.setCanceled(true);
+                event.setCancellationResult(ActionResultType.sidedSuccess(!isServer));
+                return;
+            }
+        }
+
+        // Fallback for vanilla empty buckets if another mod overrides Items.BUCKET's fluid capability
+        if (stack.getItem() == Items.BUCKET) {
+            if (isServer) {
+                applyFilledContainer(milker, event.getHand(), stack, Items.MILK_BUCKET.getDefaultInstance());
+                playMilkSound(cherubTarget);
+            }
+            event.setCanceled(true);
+            event.setCancellationResult(ActionResultType.sidedSuccess(!isServer));
+        }
+    }
+
+    private static void applyFilledContainer(
+            PlayerEntity milker,
+            net.minecraft.util.Hand hand,
+            ItemStack original,
+            ItemStack filled
+    ) {
+        // Update single survival containers or already-partially-filled creative tanks in place;
+        // use DrinkHelper for stacks of empty buckets and empty creative buckets (matching vanilla cows).
+        if (original.getCount() == 1
+                && (!milker.abilities.instabuild || FluidUtil.getFluidContained(original).isPresent())) {
+            milker.setItemInHand(hand, filled);
+        } else {
+            ItemStack updated = DrinkHelper.createFilledResult(original, milker, filled);
+            milker.setItemInHand(hand, updated);
+        }
+
+        if (milker instanceof ServerPlayerEntity) {
+            milker.containerMenu.broadcastChanges();
+        }
+    }
+
+    private static void playMilkSound(PlayerEntity target) {
+        target.level.playSound(
+                null,
+                target.getX(), target.getY(), target.getZ(),
+                SoundEvents.COW_MILK,
+                SoundCategory.PLAYERS,
+                1.0F,
+                1.0F
+        );
     }
 
     @Nullable
@@ -210,6 +311,16 @@ public class JudgementAbilityEvents {
             return Math.max(MIN_SLOW_FALLING_TICKS, (int) Math.round(SLOW_FALLING_FROM_HARM_TICKS * scale));
         }
         return sourceDuration;
+    }
+
+    @SubscribeEvent
+    public static void onAttachCapabilities(AttachCapabilitiesEvent<Entity> event) {
+        if (event.getObject() instanceof PlayerEntity) {
+            JudgementMilkCapability.Provider provider =
+                    new JudgementMilkCapability.Provider((PlayerEntity) event.getObject());
+            event.addCapability(JudgementMilkCapability.ID, provider);
+            event.addListener(provider::invalidate);
+        }
     }
 
     // -------------------------------------------------------------------------

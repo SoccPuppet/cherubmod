@@ -1,6 +1,7 @@
 package org.lullaby.cherubmod;
 
 import net.minecraft.block.Block;
+import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -30,6 +31,7 @@ public class Cherubmod {
     private static final Logger LOGGER = LogManager.getLogger();
 
     public Cherubmod() {
+        ForgeMod.enableMilkFluid();
         // Register the setup method for modloading
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
         // Register the doClientStuff method for modloading
