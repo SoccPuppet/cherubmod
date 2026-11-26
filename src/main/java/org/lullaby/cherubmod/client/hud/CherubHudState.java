@@ -1,5 +1,7 @@
 package org.lullaby.cherubmod.client.hud;
 
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.IItemProvider;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.Color;
 import net.minecraft.util.text.IFormattableTextComponent;
@@ -21,6 +23,7 @@ public final class CherubHudState {
     private final float barProgress;
     private final int barColor;
     private final boolean showActiveKeybind;
+    private final ItemStack icon;
 
     private CherubHudState(Builder builder) {
         this.text = builder.text;
@@ -30,6 +33,27 @@ public final class CherubHudState {
         this.barProgress = builder.barProgress;
         this.barColor = builder.barColor;
         this.showActiveKeybind = builder.showActiveKeybind;
+        this.icon = builder.icon;
+    }
+
+    public ItemStack getIcon() {
+        return icon;
+    }
+
+    public boolean hasIcon() {
+        return !icon.isEmpty();
+    }
+
+    public static Builder builder() {
+        return new Builder(new StringTextComponent(""));
+    }
+
+    public static Builder builder(ItemStack icon) {
+        return builder().icon(icon);
+    }
+
+    public static Builder builder(IItemProvider item) {
+        return builder().icon(item);
     }
 
     public boolean shouldShowActiveKeybind() {
@@ -74,6 +98,24 @@ public final class CherubHudState {
         private float barProgress = 0.0F;
         private int barColor = VANILLA_DURABILITY_COLOR;
         private boolean showActiveKeybind = false;
+        private ItemStack icon = ItemStack.EMPTY;
+
+        /** Display an ItemStack (preserves NBT such as enchantment glint, dye colors, or potion tints). */
+        public Builder icon(ItemStack stack) {
+            this.icon = (stack == null || stack.isEmpty()) ? ItemStack.EMPTY : stack;
+            return this;
+        }
+
+        /** Convenience overload for plain items or blocks (e.g. Items.WHITE_WOOL, Blocks.RED_WOOL). */
+        public Builder icon(IItemProvider item) {
+            this.icon = item == null ? ItemStack.EMPTY : new ItemStack(item);
+            return this;
+        }
+
+        public Builder clearIcon() {
+            this.icon = ItemStack.EMPTY;
+            return this;
+        }
 
         public Builder showActiveKeybind() {
             return showActiveKeybind(true);

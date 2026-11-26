@@ -54,7 +54,7 @@ public final class CherubHudOverlay {
         }
 
         IRaceData data = player.getCapability(RaceCapability.INSTANCE).orElse(null);
-        if (data == null || data.getRace() != Race.CHERUB) {
+        if (data == null || !CherubHudRegistry.hasHudFor(data.getRace())) {
             return;
         }
 
@@ -91,6 +91,13 @@ public final class CherubHudOverlay {
         RenderSystem.defaultBlendFunc();
         blitRegion(matrixStack, frameX, frameY, texU);
 
+        if (state.hasIcon()) {
+            mc.getItemRenderer().renderAndDecorateFakeItem(state.getIcon(), innerX, innerY);
+        }
+        matrixStack.pushPose();
+        matrixStack.translate(0.0D, 0.0D, 200.0D);
+        RenderSystem.disableDepthTest();
+
         // 2. Draw centered, auto-scaled Roman numeral
         renderSlotText(matrixStack, mc.font, state, innerX, innerY);
 
@@ -104,6 +111,8 @@ public final class CherubHudOverlay {
         }
 
         // Restore default HUD texture/blend state for downstream overlays
+        RenderSystem.enableDepthTest();
+        matrixStack.popPose();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         mc.getTextureManager().bind(AbstractGui.GUI_ICONS_LOCATION);
@@ -130,8 +139,8 @@ public final class CherubHudOverlay {
 
         // Outer edge of the 22x22 slot frame sits at innerX - 3 (left) and innerX + 19 (right)
         int drawX = (slotSide == HandSide.RIGHT)
-                ? (innerX + 22)
-                : (innerX - 6 - textWidth);
+                ? (innerX + 20)
+                : (innerX - 7 - textWidth);
         int drawY = innerY + (16 - (font.lineHeight - 1)) / 2;
 
         font.drawShadow(matrixStack, display, drawX, drawY, 0xFFE0E0E0);

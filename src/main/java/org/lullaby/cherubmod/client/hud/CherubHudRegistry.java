@@ -5,6 +5,7 @@ import net.minecraft.util.text.TextFormatting;
 import org.lullaby.cherubmod.ability.ArchangelAbilityRegistry;
 import org.lullaby.cherubmod.capability.Archangel;
 import org.lullaby.cherubmod.capability.IRaceData;
+import org.lullaby.cherubmod.capability.Race;
 import org.lullaby.cherubmod.tarot.TarotArcana;
 
 import java.util.EnumMap;
@@ -15,6 +16,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public final class CherubHudRegistry {
     private static final Map<Archangel, ICherubHudProvider> ARCHANGEL_PROVIDERS = new EnumMap<>(Archangel.class);
     private static final List<ICherubHudProvider> GLOBAL_MODIFIERS = new CopyOnWriteArrayList<>();
+    private static final Map<Race, List<ICherubHudProvider>> RACE_PROVIDERS = new EnumMap<>(Race.class);
 
     private CherubHudRegistry() {}
 
@@ -25,6 +27,16 @@ public final class CherubHudRegistry {
         }
     }
 
+    public static void register(Race race, ICherubHudProvider provider) {
+        if (race != null && race != Race.NONE && provider != null) {
+            RACE_PROVIDERS.computeIfAbsent(race, r -> new CopyOnWriteArrayList<>()).add(provider);
+        }
+    }
+
+    public static boolean hasHudFor(Race race) {
+        return race == Race.CHERUB || (race != null && RACE_PROVIDERS.containsKey(race));
+    }
+
     /** Register an external modifier that runs after the active Archangel's provider. */
     public static void registerModifier(ICherubHudProvider modifier) {
         if (modifier != null) {
@@ -33,12 +45,23 @@ public final class CherubHudRegistry {
     }
 
     public static CherubHudState resolve(PlayerEntity player, IRaceData data) {
-        Archangel archangel = data.getArchangel();
-        CherubHudState.Builder builder = createBaseState(archangel);
+        Race race = data.getRace();
+        CherubHudState.Builder builder = (race == Race.CHERUB)
+                ? createBaseState(data.getArchangel())
+                : CherubHudState.builder();
 
-        ICherubHudProvider provider = ARCHANGEL_PROVIDERS.get(archangel);
-        if (provider != null) {
-            provider.apply(player, data, builder);
+        List<ICherubHudProvider> raceProviders = RACE_PROVIDERS.get(race);
+        if (raceProviders != null) {
+            for (ICherubHudProvider provider : raceProviders) {
+                provider.apply(player, data, builder);
+            }
+        }
+
+        if (race == Race.CHERUB) {
+            ICherubHudProvider archangelProvider = ARCHANGEL_PROVIDERS.get(data.getArchangel());
+            if (archangelProvider != null) {
+                archangelProvider.apply(player, data, builder);
+            }
         }
 
         for (ICherubHudProvider modifier : GLOBAL_MODIFIERS) {

@@ -1,12 +1,16 @@
 package org.lullaby.cherubmod.client.hud;
 
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.util.text.TextFormatting;
 import org.lullaby.cherubmod.capability.Archangel;
+import org.lullaby.cherubmod.capability.Race;
 import org.lullaby.cherubmod.event.MoonAbilityEvents;
 import org.lullaby.cherubmod.event.WorldAbilityEvents;
 
 public final class CherubHudProviders {
     private CherubHudProviders() {}
+    private static final ItemStack PLUSH_DEFAULT_ICON = new ItemStack(Items.WHITE_WOOL);
 
     public static void registerDefaults() {
         // Strength: bold gold when main hand is empty (punch active), regular otherwise
@@ -53,6 +57,9 @@ public final class CherubHudProviders {
                 float progress = 1.0F - (cooldownTicks / (float) WorldAbilityEvents.STASIS_COOLDOWN_TICKS);
                 state.bar(progress, 0x7A7A7A);
             }
+        });
+        CherubHudRegistry.register(Race.PLUSH, (player, data, state) -> {
+            state.icon(PLUSH_DEFAULT_ICON);
         });
     }
 }
