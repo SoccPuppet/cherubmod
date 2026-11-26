@@ -21,6 +21,7 @@ import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.text.*;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import org.lullaby.cherubmod.Cherubmod;
 import org.lullaby.cherubmod.capability.IRaceData;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
@@ -46,7 +47,11 @@ public class TarotDeckScreen extends Screen {
     private static final float TITLE_SCALE = 2F;
     private static final boolean CROP_TO_FILL_SLOT = false;
 
+    private static final ResourceLocation CARD_BACK_TEXTURE =
+            new ResourceLocation(Cherubmod.MOD_ID, "textures/gui/tarot/card_back.png");
+
     private final float[] cardAspectCache = new float[TarotArcana.values().length];
+    private float cardBackAspectCache = -1.0F;
 
     private static final int COLOR_FRAME = 0xFFFFFFFF;
     private static final int COLOR_INNER_BG = 0xFFECECEC;
@@ -91,6 +96,7 @@ public class TarotDeckScreen extends Screen {
         super.init();
 
         Arrays.fill(this.cardAspectCache, -1.0F);
+        this.cardBackAspectCache = -1.0F;
 
         // Pre-select the player's current Archangel on first open
         if (!initializedSelection) {
@@ -362,13 +368,16 @@ public class TarotDeckScreen extends Screen {
             // Dark neutral backing blends cleanly if a card has a slightly different aspect ratio
             fill(matrixStack, cx, cy, cx + cardW, cy + cardH, 0xFF141414);
 
-            ResourceLocation texture = cards[i].getTexture();
+            boolean implemented = cards[i].isImplemented();
+            ResourceLocation texture = implemented ? cards[i].getTexture() : CARD_BACK_TEXTURE;
             this.minecraft.getTextureManager().bind(texture);
             RenderSystem.enableTexture();
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
 
-            float texAspect = getOrInitCardAspect(i, texture);
+            float texAspect = implemented
+                    ? getOrInitCardAspect(i, texture)
+                    : getOrInitCardBackAspect();
             blitAspectPreserving(matrixStack, cx, cy, cardW, cardH, texAspect);
             RenderSystem.disableBlend();
 
@@ -387,6 +396,21 @@ public class TarotDeckScreen extends Screen {
             return cached;
         }
 
+        float aspect = inspectAndFilterBoundTexture(texture);
+        this.cardAspectCache[index] = aspect;
+        return aspect;
+    }
+
+    private float getOrInitCardBackAspect() {
+        if (this.cardBackAspectCache > 0.0F) {
+            return this.cardBackAspectCache;
+        }
+
+        this.cardBackAspectCache = inspectAndFilterBoundTexture(CARD_BACK_TEXTURE);
+        return this.cardBackAspectCache;
+    }
+
+    private float inspectAndFilterBoundTexture(ResourceLocation texture) {
         float aspect = CARD_ASPECT;
         // Only inspect/filter real loaded PNGs, never mutate Minecraft's shared MissingTextureSprite
         assert this.minecraft != null;
@@ -396,14 +420,11 @@ public class TarotDeckScreen extends Screen {
             if (texW > 0 && texH > 0) {
                 aspect = (float) texW / (float) texH;
             }
-            // Smooth downscaling & clean edges without needing 21 .png.mcmeta files
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
         }
-
-        this.cardAspectCache[index] = aspect;
         return aspect;
     }
 
