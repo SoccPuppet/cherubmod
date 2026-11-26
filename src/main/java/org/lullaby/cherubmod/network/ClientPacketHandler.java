@@ -40,6 +40,13 @@ public class ClientPacketHandler {
         });
     }
 
+    public static void handlePlushVelocity(PlushVelocityPacket msg) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player != null) {
+            mc.player.setDeltaMovement(msg.getX(), msg.getY(), msg.getZ());
+        }
+    }
+
     public static void handleSpallParticles(SpallParticlePacket msg) {
         Minecraft mc = Minecraft.getInstance();
         ClientWorld world = mc.level;

@@ -9,6 +9,7 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
@@ -20,6 +21,7 @@ import org.lullaby.cherubmod.Cherubmod;
 import org.lullaby.cherubmod.capability.Race;
 import org.lullaby.cherubmod.capability.RaceCapability;
 import org.lullaby.cherubmod.compat.PehkuiCompat;
+import org.lullaby.cherubmod.network.CherubNetwork;
 
 import java.util.UUID;
 
@@ -32,6 +34,8 @@ public class PlushAbilityEvents {
     private static final double PLUSH_HEALTH_PENALTY = -6.0D; // 20 -> 14 HP (7 hearts)
     private static final int RESISTANCE_DURATION_TICKS = 320; // 16s; refreshed at <= 11s so icon never blinks
     private static final int RESISTANCE_REFRESH_THRESHOLD = 220;
+    public static final double PLUSH_KNOCKBACK_MULTIPLIER = 6.0;
+    private static final double VANILLA_VELOCITY_PACKET_CAP = 3.9D;
 
     public static boolean isPlush(PlayerEntity player) {
         return player.getCapability(RaceCapability.INSTANCE)
@@ -97,14 +101,23 @@ public class PlushAbilityEvents {
         }
     }
 
-    /** Take triple knockback from combat and projectiles. */
+    /** Take massive knockback */
     @SubscribeEvent
     public static void onLivingKnockBack(LivingKnockBackEvent event) {
         LivingEntity entity = event.getEntityLiving();
         if (entity.level.isClientSide || !(entity instanceof PlayerEntity) || !isPlush((PlayerEntity) entity)) {
             return;
         }
-        event.setStrength(event.getStrength() * 6.0F);
+        event.setStrength((float) (event.getStrength() * PLUSH_KNOCKBACK_MULTIPLIER));
+    }
+
+    public static void sendUncappedVelocityIfNeeded(ServerPlayerEntity player) {
+        Vector3d motion = player.getDeltaMovement();
+        if (Math.abs(motion.x) > VANILLA_VELOCITY_PACKET_CAP
+                || Math.abs(motion.y) > VANILLA_VELOCITY_PACKET_CAP
+                || Math.abs(motion.z) > VANILLA_VELOCITY_PACKET_CAP) {
+            CherubNetwork.sendPlushVelocity(player, motion.x, motion.y, motion.z);
+        }
     }
 
     private static boolean isFallOrKinetic(DamageSource source) {

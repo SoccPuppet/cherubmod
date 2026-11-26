@@ -1,15 +1,22 @@
 package org.lullaby.cherubmod.mixin;
 
 import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.entity.CreatureAttribute;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.network.IPacket;
+import net.minecraft.network.play.ServerPlayNetHandler;
+import net.minecraft.network.play.server.SEntityVelocityPacket;
 import net.minecraft.util.DamageSource;
 import org.lullaby.cherubmod.capability.Race;
 import org.lullaby.cherubmod.capability.RaceCapability;
 import org.lullaby.cherubmod.damage.StrengthPunchDamageSource;
 import org.lullaby.cherubmod.event.MoonAbilityEvents;
+import org.lullaby.cherubmod.event.PlushAbilityEvents;
 import org.lullaby.cherubmod.event.StrengthAbilityEvents;
+import org.lullaby.cherubmod.event.WorldAbilityEvents;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -47,6 +54,36 @@ public abstract class PlayerEntityMixin {
             return 0;
         }
         return EnchantmentHelper.getFireAspect(attacker);
+    }
+
+    @Redirect(
+            method = "attack(Lnet/minecraft/entity/Entity;)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/enchantment/EnchantmentHelper;getDamageBonus(Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/CreatureAttribute;)F"
+            )
+    )
+    private float cherubmod_scaleWorldEnchantDamage(ItemStack stack, CreatureAttribute creatureAttribute) {
+        float bonus = EnchantmentHelper.getDamageBonus(stack, creatureAttribute);
+        PlayerEntity attacker = (PlayerEntity) (Object) this;
+        if (bonus > 0.0F && WorldAbilityEvents.isWorldCherub(attacker)) {
+            return bonus * WorldAbilityEvents.getDpsDamageMultiplier(attacker);
+        }
+        return bonus;
+    }
+
+    @Redirect(
+            method = "attack(Lnet/minecraft/entity/Entity;)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/network/play/ServerPlayNetHandler;send(Lnet/minecraft/network/IPacket;)V"
+            )
+    )
+    private void cherubmod_syncUncappedPlushAttackVelocity(ServerPlayNetHandler connection, IPacket<?> packet) {
+        connection.send(packet);
+        if (packet instanceof SEntityVelocityPacket && PlushAbilityEvents.isPlush(connection.player)) {
+            PlushAbilityEvents.sendUncappedVelocityIfNeeded(connection.player);
+        }
     }
 
     @Inject(method = "attack(Lnet/minecraft/entity/Entity;)V", at = @At("RETURN"))
