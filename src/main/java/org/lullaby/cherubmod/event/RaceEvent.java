@@ -60,6 +60,8 @@ public class RaceEvent {
 
                     if (event.isWasDeath()) {
                         newData.setJudgementTotemCharged(true);
+                        newData.setWorldStasisTicks(0);
+                        newData.setWorldStasisCooldownTicks(0);
 
                         Race targetRace = newData.getPendingRace();
                         if (targetRace != Race.NONE) {
@@ -71,6 +73,8 @@ public class RaceEvent {
                                 // Leaving Cherub: clear Archangel state and any lingering summoned copies
                                 newData.setArchangel(Archangel.NONE);
                                 newData.setHangedOneActiveTicks(0);
+                                newData.setWorldStasisTicks(0);
+                                newData.setWorldStasisCooldownTicks(0);
                                 newData.setPossession(ItemStack.EMPTY);
                                 PossessionHelper.removeAllPossessionStacks(clone);
                             }

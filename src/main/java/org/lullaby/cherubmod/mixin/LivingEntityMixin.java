@@ -8,10 +8,14 @@ import net.minecraft.util.DamageSource;
 import org.lullaby.cherubmod.event.HangedOneAbilityEvents;
 import org.lullaby.cherubmod.event.MoonAbilityEvents;
 import org.lullaby.cherubmod.event.StrengthAbilityEvents;
+import org.lullaby.cherubmod.event.WorldAbilityEvents;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin {
@@ -29,6 +33,29 @@ public abstract class LivingEntityMixin {
         }
         float adjusted = StrengthAbilityEvents.adjustIncomingDamage(target, source, amount);
         return MoonAbilityEvents.adjustIncomingDamage(target, source, adjusted);
+    }
+
+    @Inject(method = "tickEffects()V", at = @At("HEAD"), cancellable = true)
+    private void cherubmod_pauseEffectsInWorldStasis(CallbackInfo ci) {
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (self instanceof PlayerEntity && WorldAbilityEvents.isInWorldStasis((PlayerEntity) self)) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "attackable()Z", at = @At("HEAD"), cancellable = true)
+    private void cherubmod_untargetableInWorldStasis(CallbackInfoReturnable<Boolean> cir) {
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (self instanceof PlayerEntity && WorldAbilityEvents.isInWorldStasis((PlayerEntity) self)) {
+            cir.setReturnValue(false);
+        }
+    }
+
+    @Inject(method = "canAttack(Lnet/minecraft/entity/LivingEntity;)Z", at = @At("HEAD"), cancellable = true)
+    private void cherubmod_preventTargetingWorldStasis(LivingEntity target, CallbackInfoReturnable<Boolean> cir) {
+        if (target instanceof PlayerEntity && WorldAbilityEvents.isInWorldStasis((PlayerEntity) target)) {
+            cir.setReturnValue(false);
+        }
     }
 
     @Redirect(

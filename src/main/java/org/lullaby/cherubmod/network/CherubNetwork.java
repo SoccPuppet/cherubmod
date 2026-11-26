@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.Optional;
 
 public class CherubNetwork {
-    private static final String PROTOCOL_VERSION = "17";
+    private static final String PROTOCOL_VERSION = "19";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(Cherubmod.MOD_ID, "main"),
             () -> PROTOCOL_VERSION,
@@ -143,6 +143,8 @@ public class CherubNetwork {
                     data.getArchangel(),
                     data.isJudgementTotemCharged(),
                     data.getHangedOneActiveTicks(),
+                    data.getWorldStasisCooldownTicks(),
+                    data.getWorldStasisTicks(),
                     new ArrayList<>(data.getHoveringItems())
             );
             CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), trackingPacket);
@@ -151,11 +153,22 @@ public class CherubNetwork {
     }
 
     public static void syncTargetToViewer(ServerPlayerEntity target, ServerPlayerEntity viewer) {
-        target.getCapability(RaceCapability.INSTANCE).ifPresent(data ->
-                CHANNEL.send(
-                        PacketDistributor.PLAYER.with(() -> viewer),
-                        new SyncRacePacket(target.getId(), data)
-                )
+
+        target.getCapability(RaceCapability.INSTANCE).ifPresent(data ->{
+            SyncRacePacket trackingPacket = new SyncRacePacket(
+                    target.getId(),
+                    data.getRace(),
+                    data.getArchangel(),
+                    data.isJudgementTotemCharged(),
+                    data.getHangedOneActiveTicks(),
+                    data.getWorldStasisCooldownTicks(),
+                    data.getWorldStasisTicks(),
+                    new ArrayList<>(data.getHoveringItems())
+            );
+            CHANNEL.send(
+                    PacketDistributor.PLAYER.with(() -> viewer),
+                    new SyncRacePacket(target.getId(), data)
+            );}
         );
     }
 }

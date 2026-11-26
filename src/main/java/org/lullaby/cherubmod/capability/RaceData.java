@@ -12,6 +12,28 @@ public class RaceData implements IRaceData{
     private ItemStack possession = ItemStack.EMPTY;
     private final List<ItemStack> hoveringItems = new ArrayList<>();
     private long possessionGeneration = 0L;
+    private int worldStasisTicks = 0;
+    private int worldStasisCooldownTicks = 0;
+
+    @Override
+    public int getWorldStasisTicks() {
+        return worldStasisTicks;
+    }
+
+    @Override
+    public void setWorldStasisTicks(int ticks) {
+        this.worldStasisTicks = Math.max(0, ticks);
+    }
+
+    @Override
+    public int getWorldStasisCooldownTicks() {
+        return worldStasisCooldownTicks;
+    }
+
+    @Override
+    public void setWorldStasisCooldownTicks(int ticks) {
+        this.worldStasisCooldownTicks = Math.max(0, ticks);
+    }
 
     @Override
     public Race getPendingRace() {
@@ -98,6 +120,8 @@ public class RaceData implements IRaceData{
         this.possessionGeneration = raceData.getPossessionGeneration();
         this.judgementTotemCharged = raceData.isJudgementTotemCharged();
         this.hangedOneActiveTicks = raceData.getHangedOneActiveTicks();
+        this.worldStasisTicks = raceData.getWorldStasisTicks();
+        this.worldStasisCooldownTicks = raceData.getWorldStasisCooldownTicks();
     }
 
     @Override

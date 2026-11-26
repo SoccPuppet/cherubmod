@@ -3,6 +3,7 @@ package org.lullaby.cherubmod.client.hud;
 import net.minecraft.util.text.TextFormatting;
 import org.lullaby.cherubmod.capability.Archangel;
 import org.lullaby.cherubmod.event.MoonAbilityEvents;
+import org.lullaby.cherubmod.event.WorldAbilityEvents;
 
 public final class CherubHudProviders {
     private CherubHudProviders() {}
@@ -32,6 +33,25 @@ public final class CherubHudProviders {
         CherubHudRegistry.register(Archangel.THE_HANGED_ONE, (player, data, state) -> {
             if (data.isHangedOneActive()) {
                 state.style(TextFormatting.GOLD);
+            }
+        });
+        // The World: Golden while stasis, bar indicates cooldown
+        CherubHudRegistry.register(Archangel.THE_WORLD, (player, data, state) -> {
+            int stasisTicks = data.getWorldStasisTicks();
+            if (stasisTicks > 0) {
+                state.style(TextFormatting.GOLD, TextFormatting.BOLD);
+                state.bar(
+                        stasisTicks / (float) WorldAbilityEvents.STASIS_MAX_TICKS,
+                        0xFFAA00
+                );
+                return;
+            }
+
+            int cooldownTicks = data.getWorldStasisCooldownTicks();
+            if (cooldownTicks > 0) {
+                state.style(TextFormatting.DARK_GRAY);
+                float progress = 1.0F - (cooldownTicks / (float) WorldAbilityEvents.STASIS_COOLDOWN_TICKS);
+                state.bar(progress, 0x7A7A7A);
             }
         });
     }

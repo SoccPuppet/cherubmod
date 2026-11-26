@@ -17,6 +17,16 @@ public interface IRaceData {
     Race getPendingRace();
     void setPendingRace(Race pendingRace);
 
+    int getWorldStasisTicks();
+    void setWorldStasisTicks(int ticks);
+
+    int getWorldStasisCooldownTicks();
+    void setWorldStasisCooldownTicks(int ticks);
+
+    default boolean isWorldStasisActive() {
+        return getWorldStasisTicks() > 0;
+    }
+
     default boolean isPendingRaceChange() {
         return getPendingRace() != Race.NONE;
     }

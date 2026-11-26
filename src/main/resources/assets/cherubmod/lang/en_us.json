@@ -56,6 +56,12 @@
   "archangel.cherubmod.TheHangedOne.2": "[+] Killing enemies grants 1 heart of stacking Absorption.",
   "archangel.cherubmod.TheHangedOne.3": "[~] Press the Active Ability keybind to halve your max health for Strength II for 1 minute.",
   "archangel.cherubmod.TheHangedOne.4": "[-] 2 hearts less max health (16 HP) and take 50% more knockback.",
+  "archangel.cherubmod.TheWorld.1": "[+] Being out of time, you are immune to Speed, Slowness, Haste, and Mining Fatigue.",
+  "archangel.cherubmod.TheWorld.2": "[+] Press the Active Ability keybind to step out of time for up to 4 seconds (press again to exit early), freezing yourself and all status timers while invulnerable and untargetable.",
+  "archangel.cherubmod.TheWorld.3": "[~] Moving to your own inexorable tempo, your attack speed is always fixed at 0.8, scaling melee damage to maintain total DPS.",
+  "archangel.cherubmod.TheWorld.4": "[~] Attack speed is always fixed at 0.8, scaling melee damage to maintain total DPS.",
+  "archangel.cherubmod.TheWorld.5": "[-] You cannot advance time by sleeping in a bed, and others may sleep without you.",
+
 
   "message.cherubmod.tarot.switched": "Archangel switched to %1$s",
 

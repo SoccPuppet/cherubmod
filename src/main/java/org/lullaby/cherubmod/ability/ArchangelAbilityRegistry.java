@@ -4,6 +4,7 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import org.lullaby.cherubmod.capability.Archangel;
 import org.lullaby.cherubmod.capability.IRaceData;
 import org.lullaby.cherubmod.event.HangedOneAbilityEvents;
+import org.lullaby.cherubmod.event.WorldAbilityEvents;
 
 import javax.annotation.Nullable;
 import java.util.EnumMap;
@@ -16,6 +17,7 @@ public final class ArchangelAbilityRegistry {
 
     public static void registerDefaults() {
         register(Archangel.THE_HANGED_ONE, HangedOneAbilityEvents::activateAbility);
+        register(Archangel.THE_WORLD, WorldAbilityEvents::toggleStepOutOfTime);
     }
 
     public static void register(Archangel archangel, IArchangelActiveAbility ability) {
