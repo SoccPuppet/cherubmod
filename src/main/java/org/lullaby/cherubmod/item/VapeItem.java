@@ -86,7 +86,7 @@ public class VapeItem extends Item {
                     PossessionHelper.designateMainHand(player);
                 } else {
                     if(PossessionHelper.designateMainHand(player)) {
-                    data.setPendingRaceChange(true);
+                    data.setPendingRace(Race.CHERUB);
                     CherubNetwork.syncToTrackingAndSelf(player);
                     player.hurt(VAPE_ASCENSION_DAMAGE, Float.MAX_VALUE);}
                 }

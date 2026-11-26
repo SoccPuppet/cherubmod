@@ -11,11 +11,15 @@ public interface IRaceData {
     Archangel getArchangel();
     void setArchangel(Archangel archangel);
 
-    boolean isPendingRaceChange();
-    void setPendingRaceChange(boolean pendingRaceChange);
-
     boolean isJudgementTotemCharged();
     void setJudgementTotemCharged(boolean charged);
+
+    Race getPendingRace();
+    void setPendingRace(Race pendingRace);
+
+    default boolean isPendingRaceChange() {
+        return getPendingRace() != Race.NONE;
+    }
 
     int getHangedOneActiveTicks();
     void setHangedOneActiveTicks(int ticks);

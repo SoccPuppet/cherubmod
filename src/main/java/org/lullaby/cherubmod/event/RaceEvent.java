@@ -14,11 +14,13 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.lullaby.cherubmod.Cherubmod;
+import org.lullaby.cherubmod.capability.Archangel;
 import org.lullaby.cherubmod.capability.Race;
 import org.lullaby.cherubmod.capability.RaceCapability;
 import org.lullaby.cherubmod.command.SwitchedCommand;
 import org.lullaby.cherubmod.item.ModItems;
 import org.lullaby.cherubmod.network.CherubNetwork;
+import org.lullaby.cherubmod.possession.PossessionHelper;
 
 @Mod.EventBusSubscriber(modid = Cherubmod.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class RaceEvent {
@@ -58,16 +60,24 @@ public class RaceEvent {
 
                     if (event.isWasDeath()) {
                         newData.setJudgementTotemCharged(true);
-                        if(newData.isPendingRaceChange()) {
-                            newData.setRace(Race.CHERUB);
-                            newData.setPendingRaceChange(false);
-                            applyCherubDeathKeepInventory(original, clone);
-                            if (clone instanceof ServerPlayerEntity) {
+
+                        Race targetRace = newData.getPendingRace();
+                        if (targetRace != Race.NONE) {
+                            Race previousRace = oldData.getRace();
+                            newData.setRace(targetRace);
+                            newData.setPendingRace(Race.NONE);
+
+                            if (previousRace == Race.CHERUB && targetRace != Race.CHERUB) {
+                                // Leaving Cherub: clear Archangel state and any lingering summoned copies
+                                newData.setArchangel(Archangel.NONE);
+                                newData.setHangedOneActiveTicks(0);
+                                newData.setPossession(ItemStack.EMPTY);
+                                PossessionHelper.removeAllPossessionStacks(clone);
+                            }
+
+                            if (targetRace == Race.CHERUB && previousRace != Race.CHERUB && clone instanceof ServerPlayerEntity) {
                                 getPersistedTag(clone).putBoolean(TAG_PENDING_TAROT_DECK, true);
                             }
-                        }
-                        if(oldData.getRace() == Race.CHERUB){
-                            applyCherubDeathKeepInventory(original, clone);
                         }
                     }
                 })
@@ -97,6 +107,7 @@ public class RaceEvent {
         if (event.getPlayer() instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity)event.getPlayer();
             CherubNetwork.syncToTrackingAndSelf(player);
+            PlushAbilityEvents.syncPlushState(player);
             CompoundNBT persisted = getPersistedTag(player);
             if (!persisted.getBoolean(TAG_RECEIVED_STARTER_VAPE)) {
                 persisted.putBoolean(TAG_RECEIVED_STARTER_VAPE, true);
@@ -111,6 +122,7 @@ public class RaceEvent {
         if (event.getPlayer() instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.getPlayer();
             CherubNetwork.syncToTrackingAndSelf(player);
+            PlushAbilityEvents.syncPlushState(player);
             deliverPendingTarotDeck(player);
         }
     }
@@ -157,6 +169,7 @@ public class RaceEvent {
     public static void onPlayerChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
         if (event.getPlayer() instanceof ServerPlayerEntity) {
             CherubNetwork.syncToTrackingAndSelf((ServerPlayerEntity) event.getPlayer());
+            PlushAbilityEvents.syncPlushState((ServerPlayerEntity) event.getPlayer());
         }
     }
 

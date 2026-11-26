@@ -6,6 +6,7 @@
   "refmap": "cherubmod.refmap.json",
   "mixins": [
     "EffectMixin",
+    "EntityMixin",
     "LightEngineMixin",
     "LivingEntityMixin",
     "PlayerEntityMixin",

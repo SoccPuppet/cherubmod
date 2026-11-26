@@ -32,7 +32,8 @@ public class RaceCapability {
     public static class Storage implements Capability.IStorage<IRaceData>{
         private static final String KEY_RACE = "Race";
         private static final String KEY_ARCHANGEL = "Archangel";
-        private static final String KEY_PENDING_RACECHANGE = "PendingRaceChange";
+        private static final String KEY_PENDING_RACE = "PendingRace";
+        private static final String KEY_LEGACY_PENDING = "PendingRaceChange";
         private static final String KEY_POSSESSION = "Possession";
         private static final String KEY_HOVERINGITEMS = "HoveringItems";
         private static final String KEY_POSSESSION_GEN = "PossessionGen";
@@ -45,7 +46,8 @@ public class RaceCapability {
             CompoundNBT tag = new CompoundNBT();
             tag.putString(KEY_RACE, instance.getRace().toString());
             tag.putString(KEY_ARCHANGEL, instance.getArchangel().toString());
-            tag.putBoolean(KEY_PENDING_RACECHANGE, instance.isPendingRaceChange());
+            tag.putBoolean(KEY_LEGACY_PENDING, instance.isPendingRaceChange());
+            tag.putString(KEY_PENDING_RACE, instance.getPendingRace().name());
             tag.putLong(KEY_POSSESSION_GEN, instance.getPossessionGeneration());
             tag.putBoolean(KEY_JUDGEMENT_TOTEM_CHARGED, instance.isJudgementTotemCharged());
             tag.putInt(KEY_HANGED_ONE_ACTIVE_TICKS, instance.getHangedOneActiveTicks());
@@ -79,7 +81,17 @@ public class RaceCapability {
             } catch(IllegalArgumentException e){
                 instance.setArchangel(Archangel.NONE);
             }
-            instance.setPendingRaceChange(tag.getBoolean(KEY_PENDING_RACECHANGE));
+            if (tag.contains(KEY_PENDING_RACE, Constants.NBT.TAG_STRING)) {
+                try {
+                    instance.setPendingRace(Race.valueOf(tag.getString(KEY_PENDING_RACE)));
+                } catch (IllegalArgumentException e) {
+                    instance.setPendingRace(Race.NONE);
+                }
+            } else if (tag.getBoolean(KEY_LEGACY_PENDING)) {
+                instance.setPendingRace(Race.CHERUB);
+            } else {
+                instance.setPendingRace(Race.NONE);
+            }
             instance.setPossessionGeneration(tag.getLong(KEY_POSSESSION_GEN));
             instance.setHangedOneActiveTicks(tag.getInt(KEY_HANGED_ONE_ACTIVE_TICKS));
             if (tag.contains(KEY_JUDGEMENT_TOTEM_CHARGED)) {

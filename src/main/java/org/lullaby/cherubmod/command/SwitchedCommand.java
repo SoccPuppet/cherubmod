@@ -35,7 +35,7 @@ public class SwitchedCommand {
         ServerPlayerEntity player = context.getSource().getPlayerOrException();
 
         player.getCapability(RaceCapability.INSTANCE).ifPresent(data -> {
-            data.setPendingRaceChange(true);
+            data.setPendingRace(Race.CHERUB);
             CherubNetwork.syncToTrackingAndSelf(player);
         });
 
@@ -61,7 +61,7 @@ public class SwitchedCommand {
             PossessionHelper.ejectPossession(player, data);
             data.setRace(Race.NONE);
             data.setArchangel(Archangel.NONE);
-            data.setPendingRaceChange(false);
+            data.setPendingRace(Race.NONE);
             CherubNetwork.syncToTrackingAndSelf(player);
         });
 

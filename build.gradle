@@ -20,6 +20,23 @@ apply plugin: 'org.spongepowered.mixin'
 group = mod_group_id
 version = mod_version
 
+repositories {
+    maven {
+        name = "Modrinth"
+        url = "https://api.modrinth.com/maven"
+        content {
+            includeGroup "maven.modrinth"
+        }
+    }
+}
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.16.5-36.2.42'
+
+    // Latest verified 1.16.5 Forge build on Modrinth
+    implementation fg.deobf("maven.modrinth:pehkui:3.8.2+1.16.5-forge")
+
+    // ... your existing annotationProcessor / mixin dependencies ...
+}
 base {
     archivesName = mod_id
 }

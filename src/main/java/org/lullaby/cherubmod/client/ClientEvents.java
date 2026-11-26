@@ -6,6 +6,7 @@ import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3f;
@@ -21,6 +22,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.lullaby.cherubmod.Cherubmod;
 import org.lullaby.cherubmod.capability.RaceCapability;
+import org.lullaby.cherubmod.item.SewnNeedleItem;
 import org.lullaby.cherubmod.item.VapeItem;
 import org.lullaby.cherubmod.network.CherubNetwork;
 import org.lullaby.cherubmod.network.TogglePossessionPacket;
@@ -35,13 +37,14 @@ public class ClientEvents {
     @SubscribeEvent
     public static void onFovUpdate(FOVUpdateEvent event) {
         PlayerEntity player = event.getEntity();
-        if (player.isUsingItem() && player.getUseItem().getItem() instanceof VapeItem) {
+        Item item = player.getUseItem().getItem();
+        if (player.isUsingItem() && (item instanceof VapeItem || item instanceof SewnNeedleItem)) {
             float progress = MathHelper.clamp(
                     (float) player.getTicksUsingItem() / (float) VapeItem.CHANNEL_TICKS,
                     0.0F,
                     1.0F
             );
-            // Smoothly lowers FOV down to 65% of normal over 2.5 seconds
+            // Smoothly lowers FOV down to 65% of normal
             event.setNewfov(event.getFov() * (1.0F - 0.35F * progress));
         }
     }

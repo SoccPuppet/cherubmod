@@ -61,10 +61,12 @@
 
   "death.attack.cherub_strength_spall": "%1$s was shredded by their own armor against %2$s",
   "death.attack.cherub_strength_punch": "%1$s was crushed by %2$s's bare hands",
-  "cherub.d": "You must designate your possession, an unstackable item.",
+  "item.cherubmod.sewn_needle": "Sewn Needle",
+  "death.attack.cherub_sewn_needle": "%1$s was stitched into a new form",
   "cherubmod.invalidpossession": "You must hold your new possession, a valid unstackable item.",
   "tooltip.cherubmod.vape": "Channel in offhand to become a cherub. Hold in your mainhand the item you care the most.\nAs a cherub, channel in offhand to change your Possession to your mainhand.",
   "tooltip.cherubmod.tarot_deck": "Use to select your Archangel.",
-  "tooltip.cherubmod.possession.hint": "Press %s to summon/dismiss"
+  "tooltip.cherubmod.possession.hint": "Press [%s] to summon/dismiss",
+  "tooltip.cherubmod.sewnneedle": "Channel in offhand to become a plush. \\nChannel in offhand as a plush to heal yoursel for 5 health."
 
 }

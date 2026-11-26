@@ -8,10 +8,20 @@ import java.util.List;
 public class RaceData implements IRaceData{
     private Race race = Race.NONE;
     private Archangel archangel = Archangel.NONE;
-    private boolean pendingRaceChange = false;
+    private Race pendingRace = Race.NONE;
     private ItemStack possession = ItemStack.EMPTY;
     private final List<ItemStack> hoveringItems = new ArrayList<>();
     private long possessionGeneration = 0L;
+
+    @Override
+    public Race getPendingRace() {
+        return pendingRace;
+    }
+
+    @Override
+    public void setPendingRace(Race pendingRace) {
+        this.pendingRace = pendingRace != null ? pendingRace : Race.NONE;
+    }
 
     @Override
     public long getPossessionGeneration() {
@@ -79,19 +89,10 @@ public class RaceData implements IRaceData{
     }
 
     @Override
-    public boolean isPendingRaceChange() {
-        return pendingRaceChange;
-    }
-    @Override
-    public void setPendingRaceChange(boolean pendingRaceChange) {
-        this.pendingRaceChange = pendingRaceChange;
-    }
-
-    @Override
     public void copyFrom(IRaceData raceData) {
         this.race = raceData.getRace();
+        this.pendingRace = raceData.getPendingRace();
         this.archangel = raceData.getArchangel();
-        this.pendingRaceChange = raceData.isPendingRaceChange();
         this.possession = raceData.getPossession();
         this.setHoveringItems(raceData.getHoveringItems());
         this.possessionGeneration = raceData.getPossessionGeneration();

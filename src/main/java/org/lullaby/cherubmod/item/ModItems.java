@@ -15,4 +15,6 @@ public class ModItems {
             () -> new VapeItem(new Item.Properties().tab(ItemGroup.TAB_MISC).stacksTo(1)));
     public static final RegistryObject<Item> TAROT_DECK = ITEMS.register("tarot_deck",
             () -> new TarotDeckItem(new Item.Properties().tab(ItemGroup.TAB_MISC).stacksTo(1)));
+    public static final RegistryObject<Item> SEWN_NEEDLE = ITEMS.register("sewn_needle",
+            () -> new SewnNeedleItem(new Item.Properties().tab(ItemGroup.TAB_MISC).stacksTo(1)));
 }
