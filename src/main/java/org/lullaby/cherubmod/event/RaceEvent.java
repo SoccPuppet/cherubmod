@@ -66,8 +66,10 @@ public class RaceEvent {
                         newData.setPlushStuffedTicks(0);
 
                         Race targetRace = newData.getPendingRace();
-                        if (targetRace != Race.NONE) {
+                        if (targetRace != Race.NONE || oldData.getRace() == Race.CHERUB){
                             applyCherubDeathKeepInventory(original, clone);
+                        }
+                        if (targetRace != Race.NONE) {
                             Race previousRace = oldData.getRace();
                             newData.setRace(targetRace);
                             newData.setPendingRace(Race.NONE);

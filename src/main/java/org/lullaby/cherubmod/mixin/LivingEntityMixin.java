@@ -29,7 +29,8 @@ public abstract class LivingEntityMixin {
             return amount;
         }
         float adjusted = StrengthAbilityEvents.adjustIncomingDamage(target, source, amount);
-        return MoonAbilityEvents.adjustIncomingDamage(target, source, adjusted);
+        adjusted = MoonAbilityEvents.adjustIncomingDamage(target, source, adjusted);
+        return WorldAbilityEvents.adjustIncomingMeleeDamage(target, source, adjusted);
     }
 
     @Inject(method = "canBreatheUnderwater()Z", at = @At("HEAD"), cancellable = true)

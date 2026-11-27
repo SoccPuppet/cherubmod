@@ -249,7 +249,7 @@ public class PlushAbilityEvents {
         player.addEffect(new EffectInstance(
                 Effects.MOVEMENT_SLOWDOWN,
                 durationTicks,
-                stacks - 1, // 1 -> Slowness I (0), 2 -> Slowness II (1), 3 -> Slowness III (2)
+                stacks*2 - 1, // 1 -> Slowness II (1), 2 -> Slowness IV (3), 3 -> Slowness VI (5)
                 false,      // not ambient
                 true,       // show particles
                 true        // show HUD icon

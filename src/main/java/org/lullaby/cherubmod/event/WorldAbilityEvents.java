@@ -1,5 +1,6 @@
 package org.lullaby.cherubmod.event;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
@@ -11,6 +12,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
@@ -76,11 +78,152 @@ public class WorldAbilityEvents {
     }
     private static final Set<UUID> KNOWN_WORLD_CHERUBS = ConcurrentHashMap.newKeySet();
     private static final Map<UUID, StasisSnapshot> STASIS_SNAPSHOTS = new ConcurrentHashMap<>();
+    private static final int MAX_MELEE_STACK_DEPTH = 16;
+    private static final ThreadLocal<MeleeStack> MELEE_STACK = ThreadLocal.withInitial(MeleeStack::new);
 
     private static final UUID WORLD_ATTACK_SPEED_UUID =
             UUID.fromString("91d4b8c2-3f7a-4b16-8c55-2e6f1a09d421");
-    private static final UUID WORLD_ATTACK_DAMAGE_UUID =
-            UUID.fromString("4e8a71d0-6b23-49c8-a104-7d3c9f52b814");
+
+    public static void enterMeleeAttack(PlayerEntity attacker) {
+        if (attacker == null || attacker.level.isClientSide || !isWorldCherub(attacker)) {
+            MELEE_STACK.get().pushInactive();
+            return;
+        }
+        float f2 = attacker.getAttackStrengthScale(0.5F);
+        float cooldownScalar = 0.2F + f2 * f2 * 0.8F;
+        float dpsMultiplier = getDpsDamageMultiplier(attacker);
+        MELEE_STACK.get().pushActive(attacker, dpsMultiplier, cooldownScalar);
+    }
+
+    public static void setInHurtEnemy(boolean inHurtEnemy) {
+        MELEE_STACK.get().setInHurtEnemy(inHurtEnemy);
+    }
+
+    public static float adjustIncomingMeleeDamage(LivingEntity target, DamageSource source, float amount) {
+        if (amount <= 0.0F || target.level.isClientSide) {
+            return amount;
+        }
+
+        MeleeStack stack = MELEE_STACK.get();
+        if (!stack.isActiveTop()) {
+            return amount;
+        }
+
+        PlayerEntity attacker = stack.topAttacker();
+        if (attacker == null
+                || target == attacker
+                || source.isBypassInvul()
+                || source.isProjectile()
+                || source.isExplosion()) {
+            return amount;
+        }
+
+        // Require attribution to the active melee attacker and reject indirect entities
+        // (excludes Thorns retaliation, spawned projectiles, explosions, etc.)
+        if (source.getEntity() != attacker) {
+            return amount;
+        }
+        Entity direct = source.getDirectEntity();
+        if (direct != null && direct != attacker) {
+            return amount;
+        }
+
+        float scale = stack.topDpsMultiplier();
+        if (stack.isTopInHurtEnemy()) {
+            // Vanilla resets attackStrengthTicker before calling ItemStack#hurtEnemy;
+            // apply the pre-reset cooldown scalar so hurtEnemy-based weapons respect 0.8 AS.
+            scale *= stack.topCooldownScalar();
+        }
+        return amount * scale;
+    }
+
+    @SubscribeEvent
+    public static void onServerTick(TickEvent.ServerTickEvent event) {
+        if (event.phase == TickEvent.Phase.END) {
+            MELEE_STACK.get().reset();
+        }
+    }
+
+    private static final class MeleeStack {
+        private final boolean[] active = new boolean[MAX_MELEE_STACK_DEPTH];
+        private final PlayerEntity[] attackers = new PlayerEntity[MAX_MELEE_STACK_DEPTH];
+        private final float[] dpsMultipliers = new float[MAX_MELEE_STACK_DEPTH];
+        private final float[] cooldownScalars = new float[MAX_MELEE_STACK_DEPTH];
+        private final boolean[] inHurtEnemy = new boolean[MAX_MELEE_STACK_DEPTH];
+        private int depth = 0;
+
+        void pushActive(PlayerEntity attacker, float dpsMultiplier, float cooldownScalar) {
+            int idx = depth++;
+            if (idx < MAX_MELEE_STACK_DEPTH) {
+                active[idx] = true;
+                attackers[idx] = attacker;
+                dpsMultipliers[idx] = dpsMultiplier;
+                cooldownScalars[idx] = cooldownScalar;
+                inHurtEnemy[idx] = false;
+            }
+        }
+
+        void pushInactive() {
+            int idx = depth++;
+            if (idx < MAX_MELEE_STACK_DEPTH) {
+                active[idx] = false;
+                attackers[idx] = null;
+                inHurtEnemy[idx] = false;
+            }
+        }
+
+        void setInHurtEnemy(boolean value) {
+            if (depth > 0 && depth <= MAX_MELEE_STACK_DEPTH && active[depth - 1]) {
+                inHurtEnemy[depth - 1] = value;
+            }
+        }
+
+        void pop() {
+            if (depth <= 0) {
+                return;
+            }
+            int idx = --depth;
+            if (idx < MAX_MELEE_STACK_DEPTH) {
+                active[idx] = false;
+                attackers[idx] = null;
+                inHurtEnemy[idx] = false;
+            }
+        }
+
+        boolean isActiveTop() {
+            return depth > 0 && depth <= MAX_MELEE_STACK_DEPTH && active[depth - 1];
+        }
+
+        PlayerEntity topAttacker() {
+            return attackers[depth - 1];
+        }
+
+        float topDpsMultiplier() {
+            return dpsMultipliers[depth - 1];
+        }
+
+        float topCooldownScalar() {
+            return cooldownScalars[depth - 1];
+        }
+
+        boolean isTopInHurtEnemy() {
+            return inHurtEnemy[depth - 1];
+        }
+
+        void reset() {
+            int limit = Math.min(depth, MAX_MELEE_STACK_DEPTH);
+            for (int i = 0; i < limit; i++) {
+                active[i] = false;
+                attackers[i] = null;
+                inHurtEnemy[i] = false;
+            }
+            depth = 0;
+        }
+    }
+
+    public static void exitMeleeAttack() {
+        MELEE_STACK.get().pop();
+    }
 
     public static boolean isInWorldStasis(PlayerEntity player) {
         IRaceData data = player.getCapability(RaceCapability.INSTANCE).orElse(null);
@@ -450,7 +593,6 @@ public class WorldAbilityEvents {
         double naturalSpeed = computeNaturalAttackSpeed(attackSpeedAttr);
         if (naturalSpeed <= MIN_VALID_SPEED) {
             removeModifierIfPresent(attackSpeedAttr, WORLD_ATTACK_SPEED_UUID);
-            removeModifierIfPresent(attackDamageAttr, WORLD_ATTACK_DAMAGE_UUID);
             return;
         }
 
@@ -465,22 +607,12 @@ public class WorldAbilityEvents {
                 "cherubmod_world_attack_speed",
                 speedModAmount
         );
-        updateMultiplyTotalModifier(
-                attackDamageAttr,
-                WORLD_ATTACK_DAMAGE_UUID,
-                "cherubmod_world_dps_damage",
-                damageModAmount
-        );
     }
 
     private static void removeWorldModifiers(ServerPlayerEntity player) {
         ModifiableAttributeInstance attackSpeedAttr = player.getAttribute(Attributes.ATTACK_SPEED);
         if (attackSpeedAttr != null) {
             removeModifierIfPresent(attackSpeedAttr, WORLD_ATTACK_SPEED_UUID);
-        }
-        ModifiableAttributeInstance attackDamageAttr = player.getAttribute(Attributes.ATTACK_DAMAGE);
-        if (attackDamageAttr != null) {
-            removeModifierIfPresent(attackDamageAttr, WORLD_ATTACK_DAMAGE_UUID);
         }
     }
 

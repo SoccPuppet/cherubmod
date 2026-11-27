@@ -56,20 +56,37 @@ public abstract class PlayerEntityMixin {
         return EnchantmentHelper.getFireAspect(attacker);
     }
 
-    @Redirect(
+    @Inject(method = "attack(Lnet/minecraft/entity/Entity;)V", at = @At("HEAD"))
+    private void cherubmod_enterWorldAttack(Entity target, CallbackInfo ci) {
+        WorldAbilityEvents.enterMeleeAttack((PlayerEntity) (Object) this);
+    }
+
+    @Inject(
             method = "attack(Lnet/minecraft/entity/Entity;)V",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/enchantment/EnchantmentHelper;getDamageBonus(Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/CreatureAttribute;)F"
+                    target = "Lnet/minecraft/item/ItemStack;hurtEnemy(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/entity/player/PlayerEntity;)V"
             )
     )
-    private float cherubmod_scaleWorldEnchantDamage(ItemStack stack, CreatureAttribute creatureAttribute) {
-        float bonus = EnchantmentHelper.getDamageBonus(stack, creatureAttribute);
-        PlayerEntity attacker = (PlayerEntity) (Object) this;
-        if (bonus > 0.0F && WorldAbilityEvents.isWorldCherub(attacker)) {
-            return bonus * WorldAbilityEvents.getDpsDamageMultiplier(attacker);
-        }
-        return bonus;
+    private void cherubmod_beforeWorldHurtEnemy(Entity target, CallbackInfo ci) {
+        WorldAbilityEvents.setInHurtEnemy(true);
+    }
+
+    @Inject(
+            method = "attack(Lnet/minecraft/entity/Entity;)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/item/ItemStack;hurtEnemy(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/entity/player/PlayerEntity;)V",
+                    shift = At.Shift.AFTER
+            )
+    )
+    private void cherubmod_afterWorldHurtEnemy(Entity target, CallbackInfo ci) {
+        WorldAbilityEvents.setInHurtEnemy(false);
+    }
+
+    @Inject(method = "attack(Lnet/minecraft/entity/Entity;)V", at = @At("RETURN"))
+    private void cherubmod_exitWorldAttack(Entity target, CallbackInfo ci) {
+        WorldAbilityEvents.exitMeleeAttack();
     }
 
     @Redirect(
