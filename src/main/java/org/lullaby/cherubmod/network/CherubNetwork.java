@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Optional;
 
 public class CherubNetwork {
-    private static final String PROTOCOL_VERSION = "19";
+    private static final String PROTOCOL_VERSION = "29";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(Cherubmod.MOD_ID, "main"),
             () -> PROTOCOL_VERSION,
@@ -144,6 +144,8 @@ public class CherubNetwork {
                     data.getHangedOneActiveTicks(),
                     data.getWorldStasisCooldownTicks(),
                     data.getWorldStasisTicks(),
+                    data.getPlushStuffedStacks(),
+                    data.getPlushStuffedTicks(),
                     new ArrayList<>(data.getHoveringItems())
             );
             CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), trackingPacket);
@@ -162,6 +164,8 @@ public class CherubNetwork {
                     data.getHangedOneActiveTicks(),
                     data.getWorldStasisCooldownTicks(),
                     data.getWorldStasisTicks(),
+                    data.getPlushStuffedStacks(),
+                    data.getPlushStuffedTicks(),
                     new ArrayList<>(data.getHoveringItems())
             );
             CHANNEL.send(

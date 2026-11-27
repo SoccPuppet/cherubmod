@@ -62,12 +62,12 @@ public class RaceEvent {
                         newData.setJudgementTotemCharged(true);
                         newData.setWorldStasisTicks(0);
                         newData.setWorldStasisCooldownTicks(0);
+                        newData.setPlushStuffedStacks(0);
+                        newData.setPlushStuffedTicks(0);
 
                         Race targetRace = newData.getPendingRace();
-                        if (targetRace == Race.CHERUB || oldData.getRace() == Race.CHERUB){
-                            applyCherubDeathKeepInventory(original, clone);
-                        }
                         if (targetRace != Race.NONE) {
+                            applyCherubDeathKeepInventory(original, clone);
                             Race previousRace = oldData.getRace();
                             newData.setRace(targetRace);
                             newData.setPendingRace(Race.NONE);

@@ -22,14 +22,17 @@ public class SyncRacePacket {
     private final int hangedOneActiveTicks;
     private final int worldStasisCooldownTicks;
     private final int worldStasisTicks;
+    private final int plushStuffedStacks;
+    private final int plushStuffedTicks;
 
     public SyncRacePacket(int entityId, IRaceData data) {
         this(entityId, data.getRace(), data.getArchangel(), true, 0,
-                0, 0, new ArrayList<>(data.getHoveringItems()));
+                0, 0, 0, 0, new ArrayList<>(data.getHoveringItems()));
     }
 
     public SyncRacePacket(int entityId, Race race, Archangel archangel, boolean judgementTotemCharged, int hangedOneActiveTicks,
-                          int worldStasisCooldownTicks, int worldStasisTicks, List<ItemStack> hoveringItems) {
+                          int worldStasisCooldownTicks, int worldStasisTicks, int plushStuffedStacks, int plushStuffedTicks,
+                          List<ItemStack> hoveringItems) {
         this.entityId = entityId;
         this.race = race;
         this.archangel = archangel;
@@ -38,8 +41,14 @@ public class SyncRacePacket {
         this.judgementTotemCharged = judgementTotemCharged;
         this.worldStasisCooldownTicks = worldStasisCooldownTicks;
         this.worldStasisTicks = worldStasisTicks;
+        this.plushStuffedStacks = plushStuffedStacks;
+        this.plushStuffedTicks = plushStuffedTicks;
     }
 
+    public int getPlushStuffedStacks() {
+        return plushStuffedStacks;
+    }
+    public int getPlushStuffedTicks() {return plushStuffedTicks;}
     public int getEntityId() { return entityId; }
     public Race getRace() { return race; }
     public Archangel getArchangel() { return archangel; }
@@ -58,6 +67,8 @@ public class SyncRacePacket {
         buf.writeVarInt(msg.hangedOneActiveTicks);
         buf.writeVarInt(msg.worldStasisCooldownTicks);
         buf.writeVarInt(msg.worldStasisTicks);
+        buf.writeVarInt(msg.plushStuffedStacks);
+        buf.writeVarInt(msg.plushStuffedTicks);
         for (ItemStack stack : msg.hoveringItems) {
             buf.writeItem(stack);
         }
@@ -72,12 +83,15 @@ public class SyncRacePacket {
         int hangedOneActiveTicks = buf.readVarInt();
         int worldStasisCooldownTicks = buf.readVarInt();
         int worldStasisTicks = buf.readVarInt();
+        int plushStuffedStacks = buf.readVarInt();
+        int plushStuffedTicks = buf.readVarInt();
         List<ItemStack> hovering = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
             hovering.add(buf.readItem());
         }
         return new SyncRacePacket(entityId, race, archangel, judgementTotemCharged,
-                hangedOneActiveTicks, worldStasisCooldownTicks, worldStasisTicks, hovering);
+                hangedOneActiveTicks, worldStasisCooldownTicks, worldStasisTicks,
+                plushStuffedStacks, plushStuffedTicks, hovering);
     }
 
     public static void handle(SyncRacePacket msg, Supplier<NetworkEvent.Context> ctxSupplier) {

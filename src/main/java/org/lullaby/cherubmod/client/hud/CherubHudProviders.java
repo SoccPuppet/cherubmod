@@ -6,11 +6,17 @@ import net.minecraft.util.text.TextFormatting;
 import org.lullaby.cherubmod.capability.Archangel;
 import org.lullaby.cherubmod.capability.Race;
 import org.lullaby.cherubmod.event.MoonAbilityEvents;
+import org.lullaby.cherubmod.event.PlushAbilityEvents;
 import org.lullaby.cherubmod.event.WorldAbilityEvents;
 
 public final class CherubHudProviders {
     private CherubHudProviders() {}
-    private static final ItemStack PLUSH_DEFAULT_ICON = new ItemStack(Items.WHITE_WOOL);
+    private static final ItemStack[] PLUSH_WOOL_ICONS = new ItemStack[] {
+            new ItemStack(Items.WHITE_WOOL),  // 0 stacks
+            new ItemStack(Items.LIME_WOOL),  // 1 stack
+            new ItemStack(Items.YELLOW_WOOL), // 2 stacks
+            new ItemStack(Items.RED_WOOL)     // 3 stacks
+    };
 
     public static void registerDefaults() {
         // Strength: bold gold when main hand is empty (punch active), regular otherwise
@@ -58,6 +64,16 @@ public final class CherubHudProviders {
                 state.bar(progress, 0x7A7A7A);
             }
         });
-        CherubHudRegistry.register(Race.PLUSH, (player, data, state) -> state.icon(PLUSH_DEFAULT_ICON));
+        CherubHudRegistry.register(Race.PLUSH, (player, data, state) -> {
+            int stacks = data.getPlushStuffedStacks();
+            int index = Math.max(0, Math.min(stacks, PLUSH_WOOL_ICONS.length - 1));
+            state.icon(PLUSH_WOOL_ICONS[index]);
+
+            int ticks = data.getPlushStuffedTicks();
+            if (stacks > 0 && ticks > 0) {
+                float progress = ticks / (float) PlushAbilityEvents.WOOL_STUFFED_DURATION_TICKS;
+                state.bar(progress);
+            }
+        });
     }
 }

@@ -48,9 +48,10 @@ public class PlushAbilityEvents {
     private static final int RESISTANCE_REFRESH_THRESHOLD = 220;
     public static final double PLUSH_KNOCKBACK_MULTIPLIER = 5.0;
     private static final double VANILLA_VELOCITY_PACKET_CAP = 3.9D;
-
-    public static final int WOOL_STUFFED_DURATION_TICKS = 600; // 30 seconds
+    public static final int MAX_STUFFED_STACKS = 3;
+    public static final int WOOL_STUFFED_DURATION_TICKS = 600; // 30 seconds per stack
     private static final String TAG_PLUSH_STUFFED_TICKS = "cherubmod_plush_stuffed_ticks";
+    private static final String TAG_PLUSH_STUFFED_STACKS = "cherubmod_plush_stuffed_stacks";
 
     public static boolean isPlush(PlayerEntity player) {
         IRaceData data = player.getCapability(RaceCapability.INSTANCE).orElse(null);
@@ -59,25 +60,42 @@ public class PlushAbilityEvents {
 
     /** Call from RaceEvents on login, respawn, and dimension change, as well as /switched off. */
     public static void syncPlushState(ServerPlayerEntity player) {
-        boolean plush = isPlush(player);
-        int stuffedTicks = getStuffedTicks(player);
+        IRaceData data = player.getCapability(RaceCapability.INSTANCE).orElse(null);
+        boolean plush = data != null && data.getRace() == Race.PLUSH;
+        int stuffedStacks = data != null ? data.getPlushStuffedStacks() : 0;
+        int stuffedTicks = data != null ? data.getPlushStuffedTicks() : 0;
 
-        if (!plush && stuffedTicks > 0) {
-            setStuffedTicks(player, 0);
-            stuffedTicks = 0;
-        }
-
-        PehkuiCompat.updatePlushScale(player, plush, plush && stuffedTicks > 0);
-
-        if (plush) {
-            ensureMaxHealthModifier(player);
-            maintainResistance(player);
-            if (player.getAirSupply() < player.getMaxAirSupply()) {
-                player.setAirSupply(player.getMaxAirSupply());
+        if (!plush) {
+            if (data != null && (stuffedStacks > 0 || stuffedTicks > 0)) {
+                clearStuffedSlowness(player, stuffedStacks);
+                data.setPlushStuffedStacks(0);
+                data.setPlushStuffedTicks(0);
+                CherubNetwork.syncToTrackingAndSelf(player);
             }
-        } else {
+            PehkuiCompat.updatePlushScale(player, false, 0);
             removeMaxHealthModifier(player);
             clearPlushResistance(player);
+            return;
+        }
+
+        if (stuffedStacks == 0 && stuffedTicks > 0) {
+            data.setPlushStuffedTicks(0);
+            stuffedTicks = 0;
+        } else if (stuffedStacks > 0 && stuffedTicks <= 0) {
+            stuffedTicks = WOOL_STUFFED_DURATION_TICKS;
+            data.setPlushStuffedTicks(stuffedTicks);
+        }
+
+        PehkuiCompat.updatePlushScale(player, true, stuffedStacks);
+        ensureMaxHealthModifier(player);
+        maintainResistance(player);
+
+        if (stuffedStacks > 0) {
+            maintainStuffedSlowness(player, stuffedStacks, stuffedTicks);
+        }
+
+        if (player.getAirSupply() < player.getMaxAirSupply()) {
+            player.setAirSupply(player.getMaxAirSupply());
         }
     }
 
@@ -96,21 +114,53 @@ public class PlushAbilityEvents {
             return;
         }
         ServerPlayerEntity player = (ServerPlayerEntity) event.player;
-        int stuffedTicks = getStuffedTicks(player);
-        if (stuffedTicks > 0 && isPlush(player)) {
-            setStuffedTicks(player, stuffedTicks - 1);
+
+        if (isPlush(player)) {
+            tickStuffedStacks(player);
         }
+
         syncPlushState(player);
     }
 
-    /** Clear any active wool growth timer on death so the Plush respawns at 0.9 blocks. */
+    private static void tickStuffedStacks(ServerPlayerEntity player) {
+        IRaceData data = player.getCapability(RaceCapability.INSTANCE).orElse(null);
+        if (data == null) {
+            return;
+        }
+
+        int stacks = data.getPlushStuffedStacks();
+        if (stacks <= 0) {
+            return;
+        }
+
+        int nextTicks = data.getPlushStuffedTicks() - 1;
+        if (nextTicks > 0) {
+            data.setPlushStuffedTicks(nextTicks);
+            return;
+        }
+
+        int nextStacks = stacks - 1;
+        data.setPlushStuffedStacks(nextStacks);
+        clearStuffedSlowness(player, stacks);
+
+        if (nextStacks > 0) {
+            data.setPlushStuffedTicks(WOOL_STUFFED_DURATION_TICKS);
+            applyStuffedSlowness(player, nextStacks, WOOL_STUFFED_DURATION_TICKS);
+        } else {
+            data.setPlushStuffedTicks(0);
+        }
+
+        CherubNetwork.syncToTrackingAndSelf(player);
+    }
+
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
         LivingEntity entity = event.getEntityLiving();
         if (!entity.level.isClientSide && entity instanceof ServerPlayerEntity) {
-            ServerPlayerEntity player = (ServerPlayerEntity) entity;
-            if (getStuffedTicks(player) > 0) {
-                setStuffedTicks(player, 0);
+            IRaceData data = entity.getCapability(RaceCapability.INSTANCE).orElse(null);
+            if (data != null && (data.getPlushStuffedStacks() > 0 || data.getPlushStuffedTicks() > 0)) {
+                data.setPlushStuffedStacks(0);
+                data.setPlushStuffedTicks(0);
             }
         }
     }
@@ -138,26 +188,19 @@ public class PlushAbilityEvents {
         if (!healer.level.isClientSide && plushTarget instanceof ServerPlayerEntity) {
             ServerPlayerEntity serverTarget = (ServerPlayerEntity) plushTarget;
 
-            if (!healer.abilities.instabuild) {
-                stack.shrink(1);
+            IRaceData targetData = serverTarget.getCapability(RaceCapability.INSTANCE).orElse(null);
+            if (targetData == null) {
+                return;
             }
 
-            float missingHealth = serverTarget.getMaxHealth() - serverTarget.getHealth();
-            if (missingHealth > 0.0F) {
-                serverTarget.heal(missingHealth);
-            }
+            int nextStacks = Math.min(MAX_STUFFED_STACKS, targetData.getPlushStuffedStacks() + 1);
+            targetData.setPlushStuffedStacks(nextStacks);
+            targetData.setPlushStuffedTicks(WOOL_STUFFED_DURATION_TICKS);
 
-            setStuffedTicks(serverTarget, WOOL_STUFFED_DURATION_TICKS);
-            PehkuiCompat.updatePlushScale(serverTarget, true, true);
+            CherubNetwork.syncToTrackingAndSelf(serverTarget);
 
-            serverTarget.addEffect(new EffectInstance(
-                    Effects.MOVEMENT_SLOWDOWN,
-                    WOOL_STUFFED_DURATION_TICKS,
-                    0,     // Slowness I
-                    false, // not ambient
-                    true,  // show particles
-                    true   // show HUD icon
-            ));
+            PehkuiCompat.updatePlushScale(serverTarget, true, nextStacks);
+            applyStuffedSlowness(serverTarget, nextStacks, WOOL_STUFFED_DURATION_TICKS);
 
             serverTarget.level.playSound(
                     null,
@@ -165,7 +208,7 @@ public class PlushAbilityEvents {
                     SoundEvents.WOOL_PLACE,
                     SoundCategory.PLAYERS,
                     0.9F,
-                    1.0F + serverTarget.level.random.nextFloat() * 0.2F
+                    1.15F - (nextStacks * 0.1F) + serverTarget.level.random.nextFloat() * 0.15F
             );
 
             if (serverTarget.level instanceof ServerWorld) {
@@ -187,6 +230,53 @@ public class PlushAbilityEvents {
 
         event.setCanceled(true);
         event.setCancellationResult(ActionResultType.sidedSuccess(healer.level.isClientSide));
+    }
+
+    private static int getStuffedStacks(PlayerEntity player) {
+        int raw = getPersistedTag(player).getInt(TAG_PLUSH_STUFFED_STACKS);
+        return Math.max(0, Math.min(raw, MAX_STUFFED_STACKS));
+    }
+
+    private static void setStuffedStacks(PlayerEntity player, int stacks) {
+        int clamped = Math.max(0, Math.min(stacks, MAX_STUFFED_STACKS));
+        getPersistedTag(player).putInt(TAG_PLUSH_STUFFED_STACKS, clamped);
+    }
+
+    private static void applyStuffedSlowness(ServerPlayerEntity player, int stacks, int durationTicks) {
+        if (stacks <= 0 || durationTicks <= 0) {
+            return;
+        }
+        player.addEffect(new EffectInstance(
+                Effects.MOVEMENT_SLOWDOWN,
+                durationTicks,
+                stacks - 1, // 1 -> Slowness I (0), 2 -> Slowness II (1), 3 -> Slowness III (2)
+                false,      // not ambient
+                true,       // show particles
+                true        // show HUD icon
+        ));
+    }
+
+    /** Ensures milk/relogs cannot strip stuffed slowness without overwriting stronger or longer external slowness. */
+    private static void maintainStuffedSlowness(ServerPlayerEntity player, int stacks, int durationTicks) {
+        int targetAmplifier = stacks - 1;
+        EffectInstance current = player.getEffect(Effects.MOVEMENT_SLOWDOWN);
+        if (current == null
+                || current.getAmplifier() < targetAmplifier
+                || (current.getAmplifier() == targetAmplifier && current.getDuration() < durationTicks - 2)) {
+            applyStuffedSlowness(player, stacks, durationTicks);
+        }
+    }
+
+    private static void clearStuffedSlowness(ServerPlayerEntity player, int previousStacks) {
+        if (previousStacks <= 0) {
+            return;
+        }
+        EffectInstance current = player.getEffect(Effects.MOVEMENT_SLOWDOWN);
+        if (current != null
+                && current.getAmplifier() == previousStacks - 1
+                && current.getDuration() <= WOOL_STUFFED_DURATION_TICKS) {
+            player.removeEffect(Effects.MOVEMENT_SLOWDOWN);
+        }
     }
 
     /** Immune to fall distance calculation, sounds, and fall damage. */

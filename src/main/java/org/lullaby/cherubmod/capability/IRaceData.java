@@ -27,6 +27,12 @@ public interface IRaceData {
         return getWorldStasisTicks() > 0;
     }
 
+    int getPlushStuffedStacks();
+    void setPlushStuffedStacks(int stacks);
+
+    int getPlushStuffedTicks();
+    void setPlushStuffedTicks(int ticks);
+
     default boolean isPendingRaceChange() {
         return getPendingRace() != Race.NONE;
     }

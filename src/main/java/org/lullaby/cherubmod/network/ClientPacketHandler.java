@@ -39,6 +39,8 @@ public class ClientPacketHandler {
             data.setHangedOneActiveTicks(msg.getHangedOneActiveTicks());
             data.setWorldStasisCooldownTicks(msg.getWorldStasisCooldownTicks());
             data.setWorldStasisTicks(msg.getWorldStasisTicks());
+            data.setPlushStuffedStacks(msg.getPlushStuffedStacks());
+            data.setPlushStuffedTicks(msg.getPlushStuffedTicks());
         });
     }
 

@@ -21,6 +21,8 @@ import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.lullaby.cherubmod.Cherubmod;
+import org.lullaby.cherubmod.capability.IRaceData;
+import org.lullaby.cherubmod.capability.Race;
 import org.lullaby.cherubmod.capability.RaceCapability;
 import org.lullaby.cherubmod.item.SewnNeedleItem;
 import org.lullaby.cherubmod.item.VapeItem;
@@ -33,6 +35,26 @@ import java.util.List;
 
 @Mod.EventBusSubscriber(modid = Cherubmod.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientEvents {
+
+    private static void tickPlushStuffedTimer(Minecraft mc) {
+        if (mc.isPaused()) {
+            return;
+        }
+        PlayerEntity player = mc.player;
+        if (player == null) {
+            return;
+        }
+
+        IRaceData data = player.getCapability(RaceCapability.INSTANCE).orElse(null);
+        if (data == null || data.getRace() != Race.PLUSH || data.getPlushStuffedStacks() <= 0) {
+            return;
+        }
+
+        int ticks = data.getPlushStuffedTicks();
+        if (ticks > 1) {
+            data.setPlushStuffedTicks(ticks - 1);
+        }
+    }
 
     @SubscribeEvent
     public static void onFovUpdate(FOVUpdateEvent event) {
@@ -51,6 +73,9 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event) {
+        if(event.phase == TickEvent.Phase.END){
+            tickPlushStuffedTimer(Minecraft.getInstance());
+        }
         if (event.phase != TickEvent.Phase.END || Minecraft.getInstance().player == null) {
             return;
         }

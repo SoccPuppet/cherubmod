@@ -14,6 +14,28 @@ public class RaceData implements IRaceData{
     private long possessionGeneration = 0L;
     private int worldStasisTicks = 0;
     private int worldStasisCooldownTicks = 0;
+    private int plushStuffedStacks = 0;
+    private int plushStuffedTicks = 0;
+
+    @Override
+    public int getPlushStuffedStacks() {
+        return plushStuffedStacks;
+    }
+
+    @Override
+    public void setPlushStuffedStacks(int stacks) {
+        this.plushStuffedStacks = Math.max(0, Math.min(stacks, 3));
+    }
+
+    @Override
+    public int getPlushStuffedTicks() {
+        return plushStuffedTicks;
+    }
+
+    @Override
+    public void setPlushStuffedTicks(int ticks) {
+        this.plushStuffedTicks = Math.max(0, ticks);
+    }
 
     @Override
     public int getWorldStasisTicks() {
@@ -122,6 +144,8 @@ public class RaceData implements IRaceData{
         this.hangedOneActiveTicks = raceData.getHangedOneActiveTicks();
         this.worldStasisTicks = raceData.getWorldStasisTicks();
         this.worldStasisCooldownTicks = raceData.getWorldStasisCooldownTicks();
+        this.plushStuffedStacks = raceData.getPlushStuffedStacks();
+        this.plushStuffedTicks = raceData.getPlushStuffedTicks();
     }
 
     @Override
